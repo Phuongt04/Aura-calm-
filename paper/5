@@ -1,0 +1,11 @@
+TY  - JOUR
+AU  - Liu, Feng
+PY  - 2024
+TI  - Artificial Intelligence in Emotion Quantification : A Prospective Overview
+JO  - CAAI Artificial Intelligence Research
+SN  - 2097-194X
+SP  - 9150040
+VL  - 3
+AB  - The field of Artificial Intelligence (AI) is witnessing a rapid evolution in the field of emotion quantification. New possibilities for understanding and parsing human emotions are emerging from advances in this technology. Multi-modal data sources, including facial expressions, speech, text, gestures, and physiological signals, are combined with machine learning and deep learning methods in modern emotion recognition systems. These systems achieve accurate recognition of emotional states in a wide range of complex environments. This paper provides a comprehensive overview of research advances in multi-modal emotion recognition techniques. This serves as a foundation for an in-depth discussion combining the field of AI with the quantification of emotion, a focus of attention in the field of psychology. It also explores the privacy and ethical issues faced during the processing and analysis of emotion data, and the implications of these challenges for future research directions. In conclusion, the objective of this paper is to adopt a forward-looking perspective on the development trajectory of AI in the field of emotion quantification, and also point out the potential value of emotion quantification research in a number of areas, including emotion quantification platforms and tools, computational psychology, and computational psychiatry.
+UR  - https://doi.org/10.26599/AIR.2024.9150040
+DO  - 10.26599/AIR.2024.9150040
