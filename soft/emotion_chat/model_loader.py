@@ -12,6 +12,7 @@ import h5py
 from pathlib import Path
 
 from tensorflow.keras.models import load_model, model_from_json
+from tensorflow.keras import layers, Sequential
 from . import config as cfg
 
 
@@ -39,19 +40,49 @@ def _load_legacy_h5(path: Path):
         lc = layer.get("config", {})
         if layer.get("class_name") == "InputLayer" and "batch_shape" in lc:
             lc["batch_input_shape"] = lc.pop("batch_shape")
-    model = model_from_json(json.dumps(cfg_data))
+    try:
+        model = model_from_json(json.dumps(cfg_data))
+    except TypeError:
+        model = _build_audio_model()
     model.load_weights(str(path))
     return model
+
+
+def _build_audio_model():
+    """Rebuild the known CNN+BiLSTM audio architecture for old H5 weights."""
+    return Sequential([
+        layers.InputLayer(shape=(cfg.AUDIO_N_FRAMES, cfg.AUDIO_IMG_SIZE, cfg.AUDIO_IMG_SIZE, 1)),
+        layers.TimeDistributed(layers.Conv2D(32, (3, 3), padding="same", activation="relu")),
+        layers.TimeDistributed(layers.BatchNormalization()),
+        layers.TimeDistributed(layers.MaxPooling2D((2, 2))),
+        layers.TimeDistributed(layers.Conv2D(64, (3, 3), padding="same", activation="relu")),
+        layers.TimeDistributed(layers.BatchNormalization()),
+        layers.TimeDistributed(layers.MaxPooling2D((2, 2))),
+        layers.TimeDistributed(layers.Conv2D(128, (3, 3), padding="same", activation="relu")),
+        layers.TimeDistributed(layers.BatchNormalization()),
+        layers.TimeDistributed(layers.MaxPooling2D((2, 2))),
+        layers.TimeDistributed(layers.Flatten()),
+        layers.Bidirectional(layers.LSTM(128, return_sequences=True)),
+        layers.Dropout(0.4),
+        layers.Bidirectional(layers.LSTM(64)),
+        layers.Dropout(0.4),
+        layers.Dense(128, activation="relu"),
+        layers.BatchNormalization(),
+        layers.Dropout(0.3),
+        layers.Dense(4, activation="softmax"),
+    ])
 
 
 def safe_load_keras(path: Path):
     """Nạp model, tự động xử lý lỗi tương thích batch_shape."""
     try:
-        return load_model(str(path))
-    except ValueError as exc:
-        if "batch_shape" not in str(exc):
+        return load_model(str(path), compile=False)
+    except (TypeError, ValueError) as exc:
+        message = str(exc)
+        legacy_markers = ("batch_shape", "Could not locate class", "DTypePolicy")
+        if not any(marker in message for marker in legacy_markers):
             raise
-        print(f"  [model_loader] Chế độ legacy cho {path.name}...")
+        print(f"  [model_loader] legacy mode for {path.name}...")
         return _load_legacy_h5(path)
 
 
@@ -65,7 +96,7 @@ def load_audio_model():
 
     model = safe_load_keras(cfg.AUDIO_MODEL_PATH)
     with open(cfg.AUDIO_LABEL_PATH, "rb") as f:
-        classes = list(pickle.load(f))
+        classes = [str(label) for label in pickle.load(f)]
 
     num_out = model.output_shape[-1]
     if len(classes) != num_out:
@@ -73,7 +104,7 @@ def load_audio_model():
             f"Số nhãn trong file ({len(classes)}) "
             f"không khớp output model ({num_out})"
         )
-    print(f"  [audio model] OK — Nhãn: {classes}")
+    print(f"  [audio model] OK - labels: {classes}")
     return model, classes
 
 
@@ -83,5 +114,5 @@ def load_face_model():
     if not cfg.FACE_MODEL_PATH.exists():
         raise FileNotFoundError(f"Không tìm thấy model khuôn mặt: {cfg.FACE_MODEL_PATH}")
     model = safe_load_keras(cfg.FACE_MODEL_PATH)
-    print(f"  [face model]  OK — Input shape: {model.input_shape}")
+    print(f"  [face model] OK - input shape: {model.input_shape}")
     return model

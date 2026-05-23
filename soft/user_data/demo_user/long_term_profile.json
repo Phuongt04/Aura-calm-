@@ -1,0 +1,26 @@
+{
+  "user_id": "demo_user",
+  "display_name": "Demo User",
+  "updated_at": "2026-05-23T15:54:57.396941+00:00",
+  "total_sessions": 2,
+  "dominant_emotion": "vui",
+  "emotion_counts": {
+    "vui": 2
+  },
+  "voice_emotion_counts": {
+    "vui": 2
+  },
+  "face_emotion_counts": {},
+  "conflict_patterns": {},
+  "preferred_styles": [],
+  "styles_to_avoid": [],
+  "recent_topics": [
+    "quit",
+    "quit"
+  ],
+  "interaction_guidance": [
+    "Mirror positive energy without becoming too noisy.",
+    "Ask open questions that let the user share good moments."
+  ],
+  "privacy_mode": "local-first"
+}

@@ -1,0 +1,19 @@
+[Long-Term Personalized Interaction Strategy]
+User: Demo User (demo_user)
+Sessions observed: 2
+Dominant emotion pattern: vui
+Privacy mode: local-first memory; do not reveal private memory unless helpful and natural.
+
+Preferred communication style:
+- not learned yet
+
+Styles to reduce:
+- none learned yet
+
+Emotion-aware guidance:
+- Mirror positive energy without becoming too noisy.
+- Ask open questions that let the user share good moments.
+
+Recent recurring topics:
+- quit
+- quit

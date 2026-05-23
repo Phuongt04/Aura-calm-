@@ -17,11 +17,12 @@ import os
 import warnings
 
 warnings.filterwarnings("ignore")
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
 
 from . import config as cfg
 from .model_loader import load_audio_model, load_face_model
-from . import audio, face, face_id, chat
+from . import audio, face, face_id, chat, voice_io
 from .fusion import (
     FusionResult,
     apply_clarified_emotion,
@@ -32,6 +33,8 @@ from .fusion import (
 from .personalization.profile import UserProfile
 from .personalization.history import SessionLog, load_recent
 from .personalization.export import save_emotion_feedback
+from .personalization.summary import update_periodic_summaries
+from .personalization.long_term import update_long_term_personalization
 from .personalization.incremental import (
     FeedbackBuffer, freeze_backbone, load_user_head, run_incremental_update
 )
@@ -139,6 +142,35 @@ def _ask_emotion_feedback(
     return confirmed_label
 
 
+def _ask_style_feedback(profile: UserProfile) -> None:
+    """Occasionally learn which response style fits this user."""
+    if not cfg.STYLE_FEEDBACK_ENABLED:
+        return
+    if cfg.STYLE_FEEDBACK_EVERY_N <= 0:
+        return
+    if profile.total_sessions == 0 or profile.total_sessions % cfg.STYLE_FEEDBACK_EVERY_N != 0:
+        return
+
+    styles = {
+        "1": "ngan gon",
+        "2": "diu nhe dong cam",
+        "3": "hoi nhieu hon",
+        "4": "dong vien tich cuc",
+        "5": "thang vao van de",
+    }
+    print("\n  [ca nhan hoa] Cach MONE noi chuyen vua roi co hop voi ban khong?")
+    print("  Chon kieu nen dung them: [1]ngan gon [2]diu nhe [3]hoi nhieu [4]dong vien [5]thang van de")
+    ans = input("  Enter=bo qua | so=ghi nho: ").strip()
+    if ans in styles:
+        profile.record_style_feedback(preferred=styles[ans])
+        print(f"  [ca nhan hoa] Da ghi nho: {styles[ans]}")
+
+    avoid = input("  Co kieu nao nen giam khong? (1-5 hoac Enter): ").strip()
+    if avoid in styles:
+        profile.record_style_feedback(avoid=styles[avoid])
+        print(f"  [ca nhan hoa] Se giam: {styles[avoid]}")
+
+
 def _clarify_conflict(result: FusionResult) -> tuple[FusionResult, str, str]:
     """
     Ask one short follow-up question when voice and face conflict.
@@ -192,16 +224,31 @@ def run() -> None:
     while True:
         print("\n" + "─" * 55)
 
+        if cfg.WAKE_WORD_ENABLED and not voice_io.wait_for_wake_word():
+            print("Hen gap lai! ")
+            break
+
         # Bước 3a: Nhận diện giọng nói — trả luôn features để có thể lưu feedback
         raw_audio = audio.record()
+        if len(raw_audio) == 0:
+            print("  [audio] Chua phat hien cau noi. MONE quay lai che do cho.")
+            continue
+
         features  = audio.preprocess(raw_audio)   # (N_FRAMES, H, W, 1)
 
-        import numpy as np
-        inp    = np.expand_dims(features, axis=0)
-        preds  = audio_model.predict(inp, verbose=0)[0]
-        v_idx  = int(np.argmax(preds))
-        v_emotion = audio_classes[v_idx]
-        v_conf    = float(preds[v_idx]) * 100
+        rms, peak = audio.quality_stats(raw_audio)
+        print(f"  [audio] rms={rms:.4f}, peak={peak:.4f}")
+        if audio.is_too_quiet(raw_audio):
+            print("  [audio] Tin hieu mic qua nho/khong ro. MONE khong phan tich AI.")
+            continue
+
+        v_emotion, v_conf, window_count = audio.predict_emotion_sliding(
+            audio_model, audio_classes, raw_audio
+        )
+        print(
+            f"  [audio] sliding windows={window_count}, "
+            f"window={cfg.AUDIO_DURATION:.1f}s, stride={cfg.AUDIO_WINDOW_STRIDE:.1f}s"
+        )
         print(f"  🎙️  Giọng nói : {v_emotion.upper()} ({v_conf:.1f}%)")
 
         # Bước 3b: Nhận diện khuôn mặt (nếu bật)
@@ -234,13 +281,22 @@ def run() -> None:
         # Bước 7: Lưu lịch sử + cập nhật hồ sơ
         if profile is not None and session is not None:
             session.save(profile.user_id)
+            summary_paths = update_periodic_summaries(profile.user_id)
             profile.record_session(result.final_emotion, result.conflict_key)
+            long_term_paths = update_long_term_personalization(profile.user_id, profile)
             profile.save()
-            print(f"\n  💾  Đã lưu phiên vào hồ sơ '{profile.display_name}'")
+            print(f"\n    Đã lưu phiên vào hồ sơ '{profile.display_name}'")
+            for path in summary_paths:
+                print(f"    [summary] {path.name}")
+            for path in long_term_paths:
+                print(f"    [long-term] {path.name}")
 
         # Bước 8: Hỏi feedback + cập nhật buffer on-device
         if profile is not None:
             _ask_emotion_feedback(profile, v_emotion, features, feedback_buffer)
+            _ask_style_feedback(profile)
+            update_long_term_personalization(profile.user_id, profile)
+            profile.save()
 
         # Bước 9: Trigger incremental update nếu buffer đủ mẫu
         if (
@@ -248,12 +304,12 @@ def run() -> None:
             and cfg.INCREMENTAL_ENABLED
             and feedback_buffer.ready()
         ):
-            audio_model = run_incremental_update(audio_model, feedback_buffer, profile.user_id)
+            audio_model = run_incremental_update(audio_model, feedback_buffer, profile.user_id) # type: ignore
 
         # Tiếp tục?
-        again = input("\n🔄  Bạn muốn thử lại không? (y/n): ").strip().lower()
+        again = input("\n  Bạn muốn thử lại không? (y/n): ").strip().lower()
         if again not in {"y", "yes", "có", "co"}:
-            print("Hẹn gặp lại! 👋")
+            print("Hẹn gặp lại! ")
             break
 
 

@@ -45,24 +45,46 @@ OLLAMA_BASE_URL    = "http://localhost:11434/v1"   # đổi IP nếu Ollama ch�
 OLLAMA_MODEL       = "tinyllama"                   # hoặc "llama3.2:1b", "phi3:mini"
 OLLAMA_TEMPERATURE = 0.8
 OLLAMA_MAX_TOKENS  = 300
+OLLAMA_MODEL       = "llama3.2:latest"
 
 # Deployment overrides for Jetson / embedded setups
 CHAT_BACKEND       = _env_str(
     "AURA_CHAT_BACKEND",
     "rule" if DEPLOY_TARGET == "jetson" else "ollama",
 )
+VOICE_CHAT_ENABLED = _env_flag("AURA_VOICE_CHAT_ENABLED", True)
+VOICE_CHAT_LANGUAGE = _env_str("AURA_VOICE_CHAT_LANGUAGE", "vi-VN")
+VOICE_CHAT_SECONDS = _env_float("AURA_VOICE_CHAT_SECONDS", 5.0)
+VOICE_CHAT_TTS_ENABLED = _env_flag("AURA_VOICE_CHAT_TTS_ENABLED", True)
+VOICE_ASSISTANT_NAME = _env_str("AURA_VOICE_ASSISTANT_NAME", "MONE")
+VOICE_CHAT_MAX_EMPTY = _env_int("AURA_VOICE_CHAT_MAX_EMPTY", 2)
+WAKE_WORD_ENABLED = _env_flag("AURA_WAKE_WORD_ENABLED", True)
+WAKE_WORDS = [
+    word.strip().lower()
+    for word in _env_str("AURA_WAKE_WORDS", "mone,mone oi,aura,aura oi").split(",")
+    if word.strip()
+]
+WAKE_LISTEN_SECONDS = _env_float("AURA_WAKE_LISTEN_SECONDS", 3.0)
+WAKE_MAX_EMPTY = _env_int("AURA_WAKE_MAX_EMPTY", 0)
+VOICE_RECORD_MAX_SECONDS = _env_float("AURA_VOICE_RECORD_MAX_SECONDS", 15.0)
+VOICE_RECORD_SILENCE_SECONDS = _env_float("AURA_VOICE_RECORD_SILENCE_SECONDS", 3.0)
+VOICE_RECORD_MIN_SECONDS = _env_float("AURA_VOICE_RECORD_MIN_SECONDS", 0.8)
+VOICE_RECORD_RMS_THRESHOLD = _env_float("AURA_VOICE_RECORD_RMS_THRESHOLD", 0.012)
+MUSIC_DIR = _env_path("AURA_MUSIC_DIR", BASE_DIR / "music")
+MUSIC_DEFAULT_QUERY = _env_str("AURA_MUSIC_DEFAULT_QUERY", "nhac thu gian")
 OLLAMA_BASE_URL    = _env_str("AURA_OLLAMA_BASE_URL", OLLAMA_BASE_URL)
 OLLAMA_MODEL       = _env_str("AURA_OLLAMA_MODEL", OLLAMA_MODEL)
 OLLAMA_TEMPERATURE = _env_float("AURA_OLLAMA_TEMPERATURE", OLLAMA_TEMPERATURE)
 OLLAMA_MAX_TOKENS  = _env_int("AURA_OLLAMA_MAX_TOKENS", OLLAMA_MAX_TOKENS)
 
 # ── Model âm thanh ────────────────────────────────────────────────────────────
-AUDIO_MODEL_PATH  = PROJECT_ROOT / "best_model_fold_1.h5"
-AUDIO_LABEL_PATH  = BASE_DIR / "label_mapping_final.pkl"
+AUDIO_MODEL_PATH  = PROJECT_ROOT / "final_production_model.h5"
+AUDIO_LABEL_PATH  = PROJECT_ROOT / "label_mapping_final.pkl"
 AUDIO_DURATION    = 3.0
 AUDIO_SAMPLE_RATE = 22050
 AUDIO_N_FRAMES    = 10
 AUDIO_IMG_SIZE    = 64
+AUDIO_WINDOW_STRIDE = 1.5
 
 AUDIO_MODEL_PATH  = _env_path("AURA_AUDIO_MODEL_PATH", AUDIO_MODEL_PATH)
 AUDIO_LABEL_PATH  = _env_path("AURA_AUDIO_LABEL_PATH", AUDIO_LABEL_PATH)
@@ -70,6 +92,10 @@ AUDIO_DURATION    = _env_float("AURA_AUDIO_DURATION", AUDIO_DURATION)
 AUDIO_SAMPLE_RATE = _env_int("AURA_AUDIO_SAMPLE_RATE", AUDIO_SAMPLE_RATE)
 AUDIO_N_FRAMES    = _env_int("AURA_AUDIO_N_FRAMES", AUDIO_N_FRAMES)
 AUDIO_IMG_SIZE    = _env_int("AURA_AUDIO_IMG_SIZE", AUDIO_IMG_SIZE)
+AUDIO_WINDOW_STRIDE = _env_float("AURA_AUDIO_WINDOW_STRIDE", AUDIO_WINDOW_STRIDE)
+AUDIO_DEMO_PATH   = _env_path("AURA_DEMO_AUDIO_PATH", Path(""))
+AUDIO_MIN_RMS     = _env_float("AURA_AUDIO_MIN_RMS", 0.008)
+AUDIO_MIN_PEAK    = _env_float("AURA_AUDIO_MIN_PEAK", 0.03)
 
 # ── Model khuôn mặt ───────────────────────────────────────────────────────────
 FACE_ENABLED    = False                             # ← đặt True khi có model mặt
@@ -339,7 +365,7 @@ DEFAULT_OPENING = "Mình đây, bạn muốn nói chuyện gì không?"
 
 # ── Nhận dạng danh tính qua khuôn mặt (Face ID) ─────────────────────────────
 # Bật để tự động nhận ra user khi khởi động (không cần gõ tên)
-FACE_ID_ENABLED     = True
+FACE_ID_ENABLED     = _env_flag("AURA_FACE_ID_ENABLED", True)
 
 # Số ảnh chụp khi đăng ký khuôn mặt mới
 FACE_ID_SAMPLES_N   = 10
@@ -356,6 +382,14 @@ USER_DATA_DIR = BASE_DIR / "user_data"
 
 # Số phiên gần nhất đưa vào context khi gọi LLM
 HISTORY_CONTEXT_SIZE = 3
+SUMMARY_ENABLED = _env_flag("AURA_SUMMARY_ENABLED", True)
+SUMMARY_CONTEXT_CHARS = _env_int("AURA_SUMMARY_CONTEXT_CHARS", 1800)
+SUMMARY_MAX_TOPICS = _env_int("AURA_SUMMARY_MAX_TOPICS", 12)
+LONG_TERM_PERSONALIZATION_ENABLED = _env_flag("AURA_LONG_TERM_PERSONALIZATION_ENABLED", True)
+LONG_TERM_CONTEXT_CHARS = _env_int("AURA_LONG_TERM_CONTEXT_CHARS", 1600)
+LONG_TERM_RECENT_TOPIC_LIMIT = _env_int("AURA_LONG_TERM_RECENT_TOPIC_LIMIT", 10)
+STYLE_FEEDBACK_ENABLED = _env_flag("AURA_STYLE_FEEDBACK_ENABLED", True)
+STYLE_FEEDBACK_EVERY_N = _env_int("AURA_STYLE_FEEDBACK_EVERY_N", 3)
 
 # Số lượt tối đa mỗi phiên lưu vào history (mỗi "lượt" = 1 user + 1 assistant)
 MAX_HISTORY_TURNS = 6

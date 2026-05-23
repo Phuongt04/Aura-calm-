@@ -33,14 +33,23 @@ def capture_frame(camera_index: int = 0):
     """
     Chụp 1 frame từ camera.
     Trả về frame (np.ndarray BGR) hoặc None nếu không mở được camera.
+    Thử vài lần để tránh frame đầu bị tối/đen.
     """
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
         print(f"  [face] Không thể mở camera (index={camera_index}).")
         return None
-    ret, frame = cap.read()
-    cap.release()
-    return frame if ret else None
+
+    frame = None
+    try:
+        for _ in range(5):  # Thử tối đa 5 lần
+            ret, f = cap.read()
+            if ret:
+                frame = f
+                break
+    finally:
+        cap.release()
+    return frame
 
 
 def preprocess(frame: np.ndarray):

@@ -1,0 +1,357 @@
+HUONG PHAT TRIEN TUONG LAI VA BAO MAT DU LIEU CHO MONE
+======================================================
+
+1. Dinh huong nghien cuu chinh
+------------------------------
+Huong phat trien dai han cua MONE:
+
+Robot social ca nhan hoa dai han dua tren tri nho hoi thoai,
+cam xuc da nguon va hoc phong cach giao tiep cua tung nguoi dung.
+
+Y tuong cot loi:
+
+MONE khong chi nhan dien cam xuc o tung thoi diem,
+ma con hoc dan cach moi nguoi muon duoc lang nghe va tuong tac.
+
+Voi moi nguoi dung rieng, MONE co the hinh thanh:
+
+- tri nho hoi thoai
+- xu huong cam xuc
+- chu de nguoi dung hay quan tam
+- cach nguoi dung phan ung khi buon, vui, gian, met moi
+- phong cach giao tiep phu hop
+- chien luoc ho tro tinh than theo thoi gian
+
+
+2. Huong 1 - Ca nhan hoa dai han
+--------------------------------
+
+Muc tieu:
+
+MONE cang duoc dung lau, cang hieu tung nguoi hon.
+
+Cac thanh phan co the phat trien:
+
+2.1. Tri nho ngan han
+
+Dung trong mot phien hoi thoai hien tai.
+MONE nho nguoi dung vua noi gi, cam xuc hien tai la gi, va chu de dang noi.
+
+2.2. Tri nho trung han
+
+Tong hop theo ngay hoac tuan.
+Vi du:
+
+- hom nay nguoi dung noi ve hoc tap
+- tuan nay nguoi dung hay met moi
+- gan day nguoi dung thich nghe nhac de thu gian
+
+2.3. Tri nho dai han
+
+Tong hop thanh ho so rieng cua tung nguoi.
+Vi du:
+
+- nguoi nay thich cau tra loi ngan gon
+- khi buon, nguoi nay thich duoc lang nghe hon la nhan loi khuyen
+- khi gian, nguoi nay can MONE noi cham va binh tinh
+- nguoi nay thuong vui hon khi noi ve gia dinh, am nhac hoac robot
+
+
+3. Huong 2 - Cam xuc da nguon
+-----------------------------
+
+Hien tai MONE co nen tang nhan dien cam xuc tu giong noi va co the mo rong qua khuon mat.
+Tuong lai co the phat trien thanh he thong multimodal emotion recognition.
+
+Cac nguon tin hieu:
+
+- giong noi
+- khuon mat
+- noi dung cau noi
+- toc do noi
+- do lon am thanh
+- khoang lang im
+- tan suat tuong tac
+- hanh vi nguoi dung lap lai
+
+Vi du:
+
+Nguoi dung noi "toi on" nhung giong noi thap, mat buon va im lang lau.
+MONE khong nen ket luan la nguoi dung on that.
+Thay vao do, MONE nen hoi nhe:
+
+"MONE nghe ban noi la on, nhung co ve ban hoi met. Ban co muon noi them khong?"
+
+
+4. Huong 3 - Hoc phong cach giao tiep
+-------------------------------------
+
+Muc tieu:
+
+MONE khong dung mot cach noi chuyen cho tat ca moi nguoi.
+
+Moi nguoi co the thich mot cach giao tiep khac nhau:
+
+- ngan gon
+- diu nhe
+- dong cam
+- hai huoc
+- hoi nhieu hon
+- it hoi hon
+- thang vao van de
+- dong vien tich cuc
+- chi lang nghe
+
+Tuong lai co the nghien cuu:
+
+- hoc tu feedback truc tiep cua nguoi dung
+- hoc tu viec nguoi dung co tiep tuc hoi thoai hay khong
+- hoc tu cam xuc sau moi cau tra loi cua MONE
+- hoc style theo tung boi canh cam xuc
+
+Vi du:
+
+Voi nguoi A:
+Khi buon, nen noi diu nhe va hoi it.
+
+Voi nguoi B:
+Khi buon, nen dong vien manh va goi y hanh dong cu the.
+
+
+5. Huong 4 - Chu dong ho tro nguoi dung
+---------------------------------------
+
+Hien tai MONE chu yeu phan hoi khi duoc goi.
+Tuong lai co the them muc do chu dong co kiem soat.
+
+Vi du:
+
+- neu nguoi dung nhieu ngay lien tuc co cam xuc buon, MONE hoi tham nhe
+- neu nguoi dung hay stress vao buoi toi, MONE co the de xuat nghe nhac
+- neu nguoi dung lau khong tuong tac, MONE co the chao hoi ngan
+- neu nguoi dung thich ke chuyen cuoi, MONE co the de xuat mot cau vui
+
+Can luu y:
+
+Robot chu dong nhung khong duoc lam phien.
+Nguoi dung phai co quyen tat tinh nang nay.
+
+
+6. Huong 5 - Robot vat ly va hanh vi bieu cam
+---------------------------------------------
+
+Neu MONE la robot vat ly, nen phat trien them embodiment.
+
+Cac huong mo rong:
+
+- den LED theo cam xuc
+- mat hien thi bieu cam
+- servo quay dau ve phia nguoi noi
+- gat dau khi lang nghe
+- chuyen dong cham khi nguoi dung buon
+- hieu ung anh sang khi phat nhac
+- trang thai "dang lang nghe", "dang nghi", "dang suy nghi"
+
+Dieu nay giup MONE khong chi la chatbot co micro,
+ma tro thanh robot social co cam giac hien dien.
+
+
+7. Huong 6 - Danh gia hieu qua ca nhan hoa
+------------------------------------------
+
+Can co thuc nghiem de chung minh MONE tot hon theo thoi gian.
+
+Co the so sanh:
+
+1. MONE khong ca nhan hoa
+2. MONE co lich su hoi thoai
+3. MONE co lich su + cam xuc + phong cach giao tiep
+
+Chi so danh gia:
+
+- nguoi dung co cam thay MONE hieu minh hon khong
+- muc do hai long sau hoi thoai
+- so lan nguoi dung tiep tuc tuong tac
+- so lan nguoi dung sua nhan cam xuc
+- so lan MONE goi y dung nhu cau
+- cam xuc nguoi dung co cai thien sau hoi thoai khong
+
+
+8. Vi sao bao mat du lieu la van de lon
+---------------------------------------
+
+MONE la robot social, nen du lieu khong chi la du lieu ky thuat.
+No co the gom:
+
+- lich su tro chuyen
+- cam xuc ca nhan
+- giong noi
+- khuon mat
+- thoi quen sinh hoat
+- chu de rieng tu
+- phong cach tam ly cua tung nguoi
+
+Neu dua het len cloud, rui ro se cao.
+
+Cac rui ro:
+
+- ro ri lich su tro chuyen
+- lo thong tin cam xuc, tam ly
+- nguoi dung mat niem tin
+- du lieu bi dung sai muc dich
+- server bi tan cong
+- API key bi lo
+- kho xoa du lieu da backup tren cloud
+
+
+9. Dinh huong bao mat: Local-first
+----------------------------------
+
+Kien truc nen chon cho MONE:
+
+Local-first personalization.
+
+Nghia la:
+
+Du lieu ca nhan hoa duoc luu tren thiet bi/robot truoc.
+Cloud chi la tuy chon, khong phai mac dinh.
+
+Du lieu nen giu local:
+
+- raw audio
+- anh khuon mat
+- history.jsonl
+- daily summary
+- weekly summary
+- long_term_profile.json
+- interaction_strategy.txt
+- head_weights.h5 cua tung user
+
+Cloud neu co chi nen dung cho:
+
+- cap nhat model base
+- backup da ma hoa
+- thong ke an danh
+- dong bo tuy chon khi nguoi dung cho phep
+
+
+10. Phan loai du lieu theo muc nhay cam
+---------------------------------------
+
+10.1. Muc rat nhay cam - khong nen dua cloud mac dinh
+
+- file am thanh goc
+- anh/video khuon mat
+- lich su tro chuyen day du
+- tom tat ngay/tuan
+- ho so cam xuc ca nhan
+- ten that, ID that cua nguoi dung
+
+10.2. Muc trung gian - chi gui khi da an danh
+
+- so lan vui/buon/gian/binhthuong
+- do chinh xac model
+- thong ke loi he thong
+- feature da xu ly, khong kem danh tinh
+
+10.3. Muc it nhay cam - co the dung cloud
+
+- version phan mem
+- model base
+- cau hinh chung
+- log ky thuat khong chua noi dung nguoi dung
+
+
+11. Nguyen tac neu dung cloud
+-----------------------------
+
+Neu sau nay muon dua MONE len cloud, nen co cac nguyen tac:
+
+1. Opt-in
+Nguoi dung phai chu dong bat dong bo cloud.
+
+2. Encrypt before upload
+Du lieu duoc ma hoa tren thiet bi truoc khi gui len server.
+
+3. Khong upload raw audio/face mac dinh
+Am thanh va khuon mat nen xu ly local.
+
+4. User-controlled forgetting
+Nguoi dung co the noi:
+
+- "MONE, xoa lich su hom nay"
+- "MONE, xoa tri nho cua toi"
+- "MONE, tat ghi nho ca nhan"
+
+5. Data minimization
+Chi luu cai can thiet cho ca nhan hoa.
+
+6. Retention policy
+Quy dinh thoi gian luu:
+
+- log tam: 7 ngay
+- summary: 90 ngay
+- profile dai han: den khi nguoi dung xoa
+
+7. Tach danh tinh
+Khong dung ten that lam khoa chinh.
+Nen dung user_id noi bo.
+
+
+12. Huong nghien cuu bao mat nang cao
+-------------------------------------
+
+12.1. Federated learning
+
+Moi robot hoc tren du lieu local cua nguoi dung.
+Cloud chi nhan cap nhat mo hinh da an danh.
+Cloud khong nhan lich su hoi thoai goc.
+
+Y nghia:
+
+Nhieu robot cung giup model chung tot hon,
+nhung cloud khong can doc du lieu rieng cua tung nguoi.
+
+12.2. Differential privacy
+
+Them nhieu co kiem soat vao thong ke/gui update,
+de giam kha nang suy nguoc du lieu ca nhan.
+
+12.3. Encrypted backup
+
+Neu nguoi dung muon sao luu cloud,
+du lieu se duoc ma hoa bang khoa nam tren thiet bi hoac do nguoi dung giu.
+
+12.4. Local LLM
+
+Neu may du manh, uu tien LLM local thay vi gui prompt len dich vu ngoai.
+Dieu nay giup giam ro ri noi dung hoi thoai.
+
+
+13. Huong trien khai de tai
+---------------------------
+
+Ten huong nghien cuu co the viet:
+
+"Long-term personalized social robot with local-first privacy-preserving memory."
+
+Hoac:
+
+"Robot social ca nhan hoa dai han dua tren tri nho hoi thoai,
+cam xuc da nguon va chien luoc bao ve du lieu local-first."
+
+Muc tieu de tai:
+
+- xay dung robot co kha nang hieu nguoi dung theo thoi gian
+- ca nhan hoa cach phan hoi theo cam xuc va phong cach giao tiep
+- bao ve du lieu rieng tu bang kien truc local-first
+- chi dung cloud khi co su dong y va da ma hoa/an danh
+
+
+14. Cau chot dinh huong
+-----------------------
+
+MONE khong chi la mot chatbot nhan dien cam xuc.
+MONE huong toi tro thanh mot robot social co tri nho dai han,
+biet hoc cach lang nghe tung nguoi,
+dong thoi ton trong quyen rieng tu va quyen kiem soat du lieu ca nhan cua nguoi dung.

@@ -41,6 +41,10 @@ class UserProfile:
     # Ghi chú tự do (có thể chỉnh tay để bổ sung ngữ cảnh)
     notes:            str = ""
 
+    # Learned conversation style preferences.
+    communication_preferences: dict = field(default_factory=dict)
+    avoided_styles:            dict = field(default_factory=dict)
+
     # ── Thuộc tính tính toán ──────────────────────────────────────────────
     @property
     def dominant_emotion(self) -> str:
@@ -60,6 +64,35 @@ class UserProfile:
         self.emotion_counts[final_emotion] = self.emotion_counts.get(final_emotion, 0) + 1
         if conflict_key:
             self.conflict_counts[conflict_key] = self.conflict_counts.get(conflict_key, 0) + 1
+
+    def record_style_feedback(self, preferred: str = "", avoid: str = "") -> None:
+        """Accumulate what response style works or does not work for this user."""
+        preferred = preferred.strip()
+        avoid = avoid.strip()
+        if preferred:
+            self.communication_preferences[preferred] = (
+                self.communication_preferences.get(preferred, 0) + 1
+            )
+        if avoid:
+            self.avoided_styles[avoid] = self.avoided_styles.get(avoid, 0) + 1
+
+    def preferred_styles(self, limit: int = 3) -> list[str]:
+        return [
+            name for name, _ in sorted(
+                self.communication_preferences.items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )[:limit]
+        ]
+
+    def styles_to_avoid(self, limit: int = 2) -> list[str]:
+        return [
+            name for name, _ in sorted(
+                self.avoided_styles.items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )[:limit]
+        ]
 
     # ── Persistence ───────────────────────────────────────────────────────
     def save(self) -> None:
@@ -98,3 +131,7 @@ class UserProfile:
         else:
             summary += "\n  → Người dùng mới, chưa có lịch sử"
         return summary
+
+    def summary_str(self) -> str:
+        """Backward-compatible name used by the chat loop."""
+        return self.summary()

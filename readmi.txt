@@ -1,0 +1,286 @@
+README MONE - Mo ta hoat dong hien tai
+=====================================
+
+1. Muc tieu cua MONE
+--------------------
+MONE la robot social co kha nang tuong tac voi tung nguoi dung theo huong ca nhan hoa dai han.
+He thong khong chi tra loi nhu chatbot thong thuong, ma con ket hop nhan dien cam xuc,
+tri nho hoi thoai, phong cach giao tiep rieng cua tung nguoi va cac chuc nang giai tri co ban.
+
+
+2. Luong hoat dong tong quat
+----------------------------
+Quy trinh chinh cua MONE:
+
+1. Cho goi ten robot bang wake word.
+   Vi du:
+   - "MONE"
+   - "MONE oi"
+   - "Aura"
+   - "Aura oi"
+
+2. Khi nghe thay ten robot, MONE moi bat dau lang nghe cau noi chinh.
+
+3. MONE chi ghi am khi phat hien co tieng noi.
+   Neu nguoi dung im lang hon 3 giay, micro se tu ngat de may nghi.
+
+4. Cau noi dai duoc xu ly bang sliding window.
+   Model duoc train voi audio 3 giay, nen cau noi dai hon se duoc cat thanh nhieu cua so 3 giay,
+   moi cua so truot 1.5 giay, sau do gop ket qua de suy ra cam xuc cuoi.
+
+5. MONE nhan dien cam xuc tu giong noi.
+   Cac nhan hien tai:
+   - binhthuong
+   - buon
+   - gian
+   - vui
+
+6. Neu bat camera va co model khuon mat, MONE co the ket hop them cam xuc khuon mat.
+
+7. MONE hop nhat ket qua cam xuc da nguon.
+   Neu giong noi va khuon mat mau thuan, he thong co the hoi them cau ngan de xac nhan.
+
+8. MONE bat dau hoi thoai voi nguoi dung dua tren cam xuc da nhan dien.
+
+9. Sau moi phien, MONE luu lich su, tom tat va cap nhat ho so ca nhan hoa.
+
+
+3. Cac thanh phan chinh
+-----------------------
+
+3.1. Wake word
+
+MONE khong nghe va phan tich lien tuc moi am thanh trong moi truong.
+Robot chi bat dau xu ly khi nghe nguoi dung goi ten.
+Dieu nay giup:
+
+- giam nhieu am nen
+- tranh bi kich hoat nham
+- tiet kiem tai nguyen
+- tao cam giac tuong tac tu nhien hon
+
+
+3.2. Ghi am den khi im lang
+
+MONE khong cat cau noi theo thoi gian co dinh 3-5 giay.
+Thay vao do, robot ghi am den khi nguoi dung noi xong.
+
+Co che:
+
+- bat dau khi co tieng noi vuot nguong am luong
+- tiep tuc ghi khi nguoi dung con noi
+- dung lai khi im lang qua 3 giay
+- neu khong phat hien cau noi that, khong chay AI phan tich
+
+
+3.3. Sliding window cho cau noi dai
+
+Model cam xuc duoc train voi dau vao co do dai co dinh 3 giay.
+Trong thuc te, nguoi dung co the noi cau dai 6 giay, 8 giay hoac hon.
+
+MONE xu ly bang sliding window:
+
+- window = 3.0 giay
+- stride = 1.5 giay
+- moi window duoc dua vao model rieng
+- ket qua duoc lay trung binh xac suat
+- nhan co xac suat cao nhat la cam xuc cuoi
+
+
+3.4. Nhan dien cam xuc da nguon
+
+Hien tai he thong uu tien giong noi.
+Neu cau hinh bat khuon mat, MONE co the lay them cam xuc tu camera.
+
+Huong hop nhat:
+
+- voice emotion
+- face emotion
+- conflict detection
+- clarification question neu co mau thuan
+
+Vi du:
+
+Nguoi dung noi nghe co ve binh thuong, nhung mat co ve buon.
+MONE se khong ket luan ngay, ma hoi nhe de xac nhan.
+
+
+3.5. Hoi thoai ca nhan hoa
+
+MONE xay dung prompt dua tren:
+
+- ten nguoi dung
+- cam xuc hien tai
+- lich su gan day
+- tom tat ngay/tuan
+- chien luoc tuong tac dai han
+- phong cach giao tiep ma nguoi dung thich
+
+Dieu nay giup MONE khong phan hoi giong nhau voi moi nguoi.
+
+
+3.6. Tri nho hoi thoai
+
+MONE luu lich su theo tung user trong:
+
+soft/user_data/{user_id}/history.jsonl
+
+Moi phien luu:
+
+- thoi gian
+- cam xuc giong noi
+- cam xuc khuon mat
+- cam xuc cuoi cung
+- co xung dot hay khong
+- noi dung hoi thoai
+
+
+3.7. Tom tat ngay va tuan
+
+Sau moi phien, MONE cap nhat tom tat:
+
+soft/user_data/{user_id}/summaries/daily_YYYY-MM-DD.txt
+soft/user_data/{user_id}/summaries/weekly_YYYY-Wxx.txt
+
+Tom tat gom:
+
+- so phien
+- thong ke cam xuc
+- mau xung dot
+- chu de gan day
+- ghi chu ca nhan hoa
+
+
+3.8. Ho so ca nhan hoa dai han
+
+MONE tao them:
+
+soft/user_data/{user_id}/long_term_profile.json
+soft/user_data/{user_id}/interaction_strategy.txt
+
+Noi dung gom:
+
+- tong so phien
+- cam xuc chu dao
+- thong ke cam xuc tu giong noi
+- thong ke cam xuc tu khuon mat
+- pattern xung dot voice/face
+- phong cach giao tiep nen dung
+- phong cach nen giam
+- chu de gan day
+- chien luoc phan hoi phu hop voi nguoi dung
+
+
+3.9. Hoc phong cach giao tiep
+
+MONE co the hoi nguoi dung sau mot so phien:
+
+- thich cau tra loi ngan gon
+- thich diu nhe, dong cam
+- thich MONE hoi nhieu hon
+- thich dong vien tich cuc
+- thich thang vao van de
+
+Thong tin nay duoc luu trong profile.json va dua vao prompt lan sau.
+
+
+3.10. Incremental learning
+
+Sau khi nguoi dung xac nhan cam xuc dung/sai, MONE co the luu feature am thanh va nhan da xac nhan.
+Khi du so mau, he thong co the cap nhat head cua model cho tung user.
+
+Muc tieu:
+
+- model hieu giong noi cua tung nguoi hon
+- khong can train lai toan bo model nang
+- co the ca nhan hoa tren thiet bi
+
+
+3.11. Phat nhac va ke chuyen cuoi
+
+MONE co them nhanh giai tri:
+
+- "MONE oi, ke chuyen cuoi"
+- "MONE oi, phat nhac"
+- "MONE oi, mo nhac chill"
+
+Neu co file nhac trong soft/music, MONE se mo file local.
+Neu khong co, MONE co the mo ket qua tim kiem YouTube.
+
+
+4. Cac file quan trong
+----------------------
+
+soft/run_chatbot.py
+- entry point de chay he thong
+
+soft/emotion_chat/main.py
+- dieu phoi pipeline chinh
+
+soft/emotion_chat/audio.py
+- ghi am, tien xu ly audio, sliding window, du doan cam xuc
+
+soft/emotion_chat/voice_io.py
+- wake word, ghi am den khi im lang, speech-to-text, text-to-speech
+
+soft/emotion_chat/chat.py
+- vong hoi thoai, LLM/rule reply, phat nhac, ke chuyen cuoi
+
+soft/emotion_chat/fusion.py
+- hop nhat cam xuc voice/face
+
+soft/emotion_chat/personalization/history.py
+- luu lich su hoi thoai
+
+soft/emotion_chat/personalization/summary.py
+- tom tat ngay/tuan
+
+soft/emotion_chat/personalization/profile.py
+- ho so ca nhan tung user
+
+soft/emotion_chat/personalization/long_term.py
+- chien luoc ca nhan hoa dai han
+
+soft/emotion_chat/personalization/incremental.py
+- cap nhat model theo feedback ca nhan
+
+
+5. Cach chay
+------------
+
+Nen chay bang moi truong ao cua project:
+
+.\.venv\Scripts\python.exe soft\run_chatbot.py
+
+Neu dung VS Code, chon interpreter:
+
+D:\Aura clam\.venv\Scripts\python.exe
+
+
+6. Trang thai hien tai cua model .h5
+------------------------------------
+
+Model dang dung:
+
+final_production_model.h5
+
+Thong tin:
+
+- input shape: (None, 10, 64, 64, 1)
+- output shape: (None, 4)
+- label: binhthuong, buon, gian, vui
+- validation accuracy gan dung: 95.36%
+
+Hien tai chua can train lai neu chua co them du lieu moi dang ke.
+
+
+7. Dinh huong thiet ke tong quat
+--------------------------------
+
+MONE duoc phat trien theo huong:
+
+Robot social ca nhan hoa dai han dua tren tri nho hoi thoai,
+cam xuc da nguon va hoc phong cach giao tiep cua tung nguoi dung.
+
+MONE cang giao tiep lau voi mot nguoi, cang hieu nguoi do can duoc lang nghe,
+hoi han, dong vien hay tro chuyen theo cach nao.

@@ -1,0 +1,17 @@
+User: demo_user
+Period: weekly 2026-W21
+Sessions: 2
+
+Emotion counts:
+- vui: 2
+
+Conflict patterns:
+- none
+
+Recent user topics:
+- quit
+- quit
+
+Personalization notes:
+- Dominant emotion in this period: vui
+- Use this as memory, not as a fixed diagnosis.

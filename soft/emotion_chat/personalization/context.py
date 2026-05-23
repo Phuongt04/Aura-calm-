@@ -13,10 +13,12 @@ from __future__ import annotations
 
 from .profile import UserProfile
 from .history import SessionLog
+from .long_term import load_long_term_strategy
+from .summary import load_latest_summaries
 from .. import config as cfg
 
 
-def build_context(profile: UserProfile, recent_sessions: list[SessionLog]) -> str:
+def build(profile: UserProfile, recent_sessions: list[SessionLog]) -> str:
     """
     Build a string representing the personalized context for the user.
     This string will be prepended to the system prompt in chat.py.
@@ -55,6 +57,15 @@ def build_context(profile: UserProfile, recent_sessions: list[SessionLog]) -> st
                 f"({profile.conflict_counts[top_conflict]} times)"
             )
 
+        preferred_styles = profile.preferred_styles()
+        avoided_styles = profile.styles_to_avoid()
+        if preferred_styles or avoided_styles:
+            context_lines.append("[Learned Communication Style]")
+            if preferred_styles:
+                context_lines.append("Use more of: " + ", ".join(preferred_styles))
+            if avoided_styles:
+                context_lines.append("Avoid or reduce: " + ", ".join(avoided_styles))
+
         # Recent session summary
         if recent_sessions:
             context_lines.append(f"Recent session summary ({len(recent_sessions)} sessions):")
@@ -70,6 +81,14 @@ def build_context(profile: UserProfile, recent_sessions: list[SessionLog]) -> st
                 context_lines.append(
                     f"  Session {i}: {session.final_emotion.upper()}{conflict_note}{last_user}"
                 )
+
+        summary_memory = load_latest_summaries(profile.user_id)
+        if summary_memory:
+            context_lines.append(summary_memory)
+
+        long_term_strategy = load_long_term_strategy(profile.user_id)
+        if long_term_strategy:
+            context_lines.append(long_term_strategy)
 
     # Add admin notes
     if profile.notes.strip():
