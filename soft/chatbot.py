@@ -26,6 +26,8 @@ import h5py
 from pathlib import Path
 from openai import OpenAI          # openai package dùng để gọi Ollama (tương thích API)
 from tensorflow.keras.models import load_model, model_from_json
+from emotion_chat import audio as audio_pipeline
+from emotion_chat import voice_io
 
 # ── Tắt log thừa ────────────────────────────────────────────────────────────
 warnings.filterwarnings("ignore")
@@ -39,7 +41,7 @@ OLLAMA_MODEL    = "tinyllama"                   # hoặc "llama3.2:1b", "phi3:mi
 BASE_DIR    = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 
-MODEL_PATH = PROJECT_ROOT / "best_model_fold_1.h5"   # đổi nếu cần
+MODEL_PATH = PROJECT_ROOT / "final_model_archive_macro_f1_vui150_lr3e6.h5"
 LABEL_PATH = BASE_DIR / "label_mapping_final.pkl"    # sinh ra bởi train.py
 
 DURATION    = 3.0
@@ -50,7 +52,7 @@ IMG_SIZE    = 64
 # ── 2. SYSTEM PROMPT THEO CẢM XÚC ───────────────────────────────────────────
 EMOTION_CONFIG = {
     "vui": {
-        "display": "VUI VẺ 😊",
+        "display": "VUI VẺ ",
         "system": (
             "Bạn là một người bạn thân vui tính, nhiệt tình. "
             "Người dùng đang trong tâm trạng vui vẻ, hứng khởi. "
@@ -60,7 +62,7 @@ EMOTION_CONFIG = {
         ),
     },
     "buon": {
-        "display": "BUỒN BÃ 😢",
+        "display": "BUỒN BÃ ",          
         "system": (
             "Bạn là một người bạn đồng cảm, ấm áp. "
             "Người dùng đang buồn và cần được lắng nghe, an ủi. "
@@ -70,7 +72,7 @@ EMOTION_CONFIG = {
         ),
     },
     "gian": {
-        "display": "TỨC GIẬN 😠",
+        "display": "TỨC GIẬN ",
         "system": (
             "Bạn là một người bạn bình tĩnh, kiên nhẫn. "
             "Người dùng đang tức giận hoặc khó chịu. "
@@ -81,7 +83,7 @@ EMOTION_CONFIG = {
         ),
     },
     "binhthuong": {
-        "display": "BÌNH THƯỜNG 😐",
+        "display": "BÌNH THƯỜNG ",
         "system": (
             "Bạn là một trợ lý thông minh, thân thiện. "
             "Người dùng đang ở tâm trạng bình thường. "
@@ -93,8 +95,15 @@ EMOTION_CONFIG = {
 }
 # Fallback cho nhãn không tìm thấy
 DEFAULT_SYSTEM = (
-    "Bạn là một trợ lý thân thiện. Hãy trò chuyện tự nhiên bằng tiếng Việt."
+    "Bạn là một trợ lý thân thiện. BẮT BUỘC luôn trả lời bằng tiếng Việt tự nhiên, có dấu. "
+    "Không trả lời bằng tiếng Anh trừ khi người dùng yêu cầu dịch hoặc học tiếng Anh."
 )
+
+
+def _say_bot(text: str) -> None:
+    """Print and speak a chatbot response."""
+    print(f"\n Chatbot: {text}\n")
+    voice_io.speak(text)
 
 # ── 3. NẠP MODEL ─────────────────────────────────────────────────────────────
 def _normalize_keras_config(value):
@@ -174,17 +183,26 @@ def preprocess(y: np.ndarray) -> np.ndarray:
 
 
 def detect_emotion(model, classes) -> tuple[str, float]:
-    audio = record_audio()
-    inp = np.expand_dims(preprocess(audio), axis=0)          # (1,10,64,64,1)
-    preds = model.predict(inp, verbose=0)[0]
-    idx = int(np.argmax(preds))
-    return classes[idx], float(preds[idx]) * 100
+    raw_audio = audio_pipeline.record()
+    model_audio = audio_pipeline.prepare_for_model(raw_audio)
+    emotion, confidence, window_count = audio_pipeline.predict_emotion_sliding(
+        model,
+        classes,
+        model_audio,
+    )
+    print(f"Phan tich {window_count} cua so am thanh: {emotion} ({confidence:.1f}%)")
+    return emotion, confidence
 
 # ── 5. CHAT VỚI OPENAI ───────────────────────────────────────────────────────
 def build_system_prompt(emotion_key: str) -> str:
     key = emotion_key.lower()
     cfg = EMOTION_CONFIG.get(key)
-    return cfg["system"] if cfg else DEFAULT_SYSTEM
+    system = cfg["system"] if cfg else DEFAULT_SYSTEM
+    return (
+        system
+        + " BẮT BUỘC: mọi câu trả lời phải bằng tiếng Việt tự nhiên, có dấu, "
+        "ngắn gọn và dễ nghe qua TTS."
+    )
 
 
 def chat_loop(emotion_key: str, confidence: float):
@@ -209,7 +227,7 @@ def chat_loop(emotion_key: str, confidence: float):
         "binhthuong": "Chào bạn! Hôm nay bạn cần mình giúp gì không?",
     }
     opening = opening_map.get(emotion_key.lower(), "Mình đây, bạn muốn nói chuyện gì không?")
-    print(f"🤖 Chatbot: {opening}\n")
+    _say_bot(opening)
 
     history = [
         {"role": "system",    "content": system_prompt},
@@ -221,7 +239,7 @@ def chat_loop(emotion_key: str, confidence: float):
         if not user_input:
             continue
         if user_input.lower() in {"quit", "thoát", "thoat", "exit"}:
-            print("\n🤖 Chatbot: Tạm biệt bạn nhé! Chúc bạn một ngày tốt lành! 👋")
+            _say_bot("Tạm biệt bạn nhé! Chúc bạn một ngày tốt lành!")
             break
 
         history.append({"role": "user", "content": user_input})
@@ -240,7 +258,7 @@ def chat_loop(emotion_key: str, confidence: float):
             break
 
         history.append({"role": "assistant", "content": reply})
-        print(f"\n🤖 Chatbot: {reply}\n")
+        _say_bot(reply)
 
 # ── 6. MAIN ──────────────────────────────────────────────────────────────────
 def main():
@@ -257,9 +275,10 @@ def main():
         # Trò chuyện theo cảm xúc
         chat_loop(emotion, confidence)
 
-        again = input("\n🔄 Bạn muốn thử lại từ đầu không? (y/n): ").strip().lower()
+        again = input("\n Bạn muốn thử lại từ đầu không? (y/n): ").strip().lower()
         if again not in {"y", "yes", "có", "co"}:
-            print("Hẹn gặp lại! 👋")
+            voice_io.speak("Hẹn gặp lại!")
+            print("Hẹn gặp lại! ")
             break
 
 

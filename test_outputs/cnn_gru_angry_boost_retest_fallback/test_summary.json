@@ -1,0 +1,54 @@
+{
+  "split": "test",
+  "model_path": "D:\\HAHA\\angry_boost_outputs (1)\\models\\cnn_gru_angry_boost_best.keras",
+  "metadata_path": "D:\\HAHA\\voice-emotion-data\\test_metadata.csv",
+  "preprocessing_note": "Ran with project fallback audio preprocessing because global Python has no librosa.",
+  "resolved_rows": 1633,
+  "missing_rows": 0,
+  "accuracy": 0.3049601959583588,
+  "balanced_accuracy": 0.29989714478859775,
+  "macro_f1": 0.2832404971726886,
+  "macro_precision": 0.30899018632064845,
+  "macro_recall": 0.29989714478859775,
+  "angry_recall": 0.5679287305122495,
+  "class_order": [
+    "neutral",
+    "happy",
+    "sad",
+    "angry"
+  ],
+  "support": {
+    "neutral": 381,
+    "happy": 454,
+    "sad": 349,
+    "angry": 449
+  },
+  "avg_preprocessing_time_ms": 21.73792155184632,
+  "avg_inference_time_ms": 5.874253896139767,
+  "confusion_matrix": [
+    [
+      84,
+      47,
+      55,
+      195
+    ],
+    [
+      72,
+      67,
+      83,
+      232
+    ],
+    [
+      60,
+      40,
+      92,
+      157
+    ],
+    [
+      84,
+      40,
+      70,
+      255
+    ]
+  ]
+}

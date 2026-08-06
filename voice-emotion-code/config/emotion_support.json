@@ -1,0 +1,90 @@
+{
+  "enabled": true,
+  "confirmation_required": true,
+  "intensity_scale_min": 1,
+  "intensity_scale_max": 5,
+  "ask_timeout_seconds": 25,
+  "trigger": {
+    "min_profile_sessions": 1,
+    "min_confidence": 70.0,
+    "emotions": [
+      "sad",
+      "angry"
+    ]
+  },
+  "serial": {
+    "enabled": false,
+    "port": "",
+    "baudrate": 115200,
+    "timeout_seconds": 1.0
+  },
+  "breathing": {
+    "inhale_seconds": 4,
+    "hold_seconds": 2,
+    "exhale_seconds": 6,
+    "cycles": 3
+  },
+  "emotion_methods": {
+    "happy": [
+      "empathetic_chat",
+      "mini_game"
+    ],
+    "sad": [
+      "empathetic_chat",
+      "relaxation_audio",
+      "grounding",
+      "self_care"
+    ],
+    "angry": [
+      "breathing",
+      "grounding",
+      "self_care",
+      "empathetic_chat"
+    ],
+    "neutral": [
+      "empathetic_chat",
+      "mini_game",
+      "self_care"
+    ],
+    "unknown": [
+      "empathetic_chat",
+      "self_care"
+    ]
+  },
+  "relaxation_audio": {
+    "rain": "assets/audio/rain.wav",
+    "ocean": "assets/audio/ocean.wav",
+    "nature": "assets/audio/nature.wav",
+    "soft_music": "assets/audio/soft_music.wav"
+  },
+  "mini_games": [
+    {
+      "type": "riddle",
+      "prompt": "Câu đố vui: Cái gì càng lau càng ướt?",
+      "answer": "khăn",
+      "response": "Đáp án là cái khăn. Mình đổi nhịp một chút nhé."
+    },
+    {
+      "type": "color_choice",
+      "prompt": "Chọn nhanh một màu bạn thấy dễ chịu lúc này: xanh, vàng hay trắng?",
+      "response": "Màu bạn chọn có thể là một điểm neo nhỏ để mình dịu lại một chút."
+    },
+    {
+      "type": "positive_question",
+      "prompt": "Kể mình nghe một điều nhỏ trong hôm nay vẫn ổn nhé?",
+      "response": "Cảm ơn bạn. Điều nhỏ vẫn có giá trị của nó."
+    },
+    {
+      "type": "countdown",
+      "prompt": "Mình cùng đếm chậm từ 5 về 1 nhé: 5, 4, 3, 2, 1.",
+      "response": "Tốt rồi, mình quay lại với nhịp chậm hơn một chút."
+    }
+  ],
+  "self_care_suggestions": [
+    "Bạn có thể uống một ngụm nước nếu thấy phù hợp.",
+    "Bạn có thể đổi tư thế hoặc thả lỏng vai một chút.",
+    "Nếu được, hãy nghỉ mắt khỏi màn hình vài phút.",
+    "Bạn có thể đi bộ nhẹ một đoạn ngắn nếu không gian an toàn.",
+    "Bạn có thể liên hệ với một người thân hoặc bạn bè mà bạn tin tưởng."
+  ]
+}

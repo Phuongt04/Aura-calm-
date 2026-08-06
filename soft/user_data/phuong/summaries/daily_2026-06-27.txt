@@ -1,0 +1,16 @@
+User: phuong
+Period: daily 2026-06-27
+Sessions: 1
+
+Emotion counts:
+- gian: 1
+
+Conflict patterns:
+- none
+
+Recent user topics:
+- thoát dừng lại stop
+
+Personalization notes:
+- Dominant emotion in this period: gian
+- Use this as memory, not as a fixed diagnosis.

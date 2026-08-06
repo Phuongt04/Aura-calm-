@@ -1,0 +1,94 @@
+{
+  "model_path": "D:\\HAHA\\final_production_model.h5",
+  "dataset_folder": "D:\\HAHA\\soft\\dataset",
+  "note": "Computed on the full training dataset used for final production model training; use an external test set for unbiased performance.",
+  "classes": [
+    "binhthuong",
+    "buon",
+    "gian",
+    "vui"
+  ],
+  "confusion_matrix": [
+    [
+      439,
+      18,
+      4,
+      1
+    ],
+    [
+      6,
+      459,
+      0,
+      2
+    ],
+    [
+      6,
+      13,
+      443,
+      5
+    ],
+    [
+      5,
+      16,
+      2,
+      443
+    ]
+  ],
+  "confusion_matrix_percent": [
+    [
+      95.02164502164501,
+      3.896103896103896,
+      0.8658008658008658,
+      0.21645021645021645
+    ],
+    [
+      1.284796573875803,
+      98.28693790149893,
+      0.0,
+      0.4282655246252677
+    ],
+    [
+      1.284796573875803,
+      2.7837259100642395,
+      94.86081370449678,
+      1.070663811563169
+    ],
+    [
+      1.0729613733905579,
+      3.4334763948497855,
+      0.4291845493562232,
+      95.06437768240343
+    ]
+  ],
+  "overall_accuracy": 0.958109559613319,
+  "per_class": [
+    {
+      "class": "binhthuong",
+      "support": 462,
+      "precision": 0.9627192982456141,
+      "recall": 0.9502164502164502,
+      "f1": 0.9564270152505446
+    },
+    {
+      "class": "buon",
+      "support": 467,
+      "precision": 0.9071146245059288,
+      "recall": 0.9828693790149893,
+      "f1": 0.9434737923946557
+    },
+    {
+      "class": "gian",
+      "support": 467,
+      "precision": 0.9866369710467706,
+      "recall": 0.9486081370449678,
+      "f1": 0.9672489082969432
+    },
+    {
+      "class": "vui",
+      "support": 466,
+      "precision": 0.9822616407982262,
+      "recall": 0.9506437768240343,
+      "f1": 0.9661941112322792
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+              precision    recall  f1-score   support
+
+  binhthuong       0.44      0.17      0.25       184
+        buon       0.38      0.47      0.42       162
+        gian       0.50      0.67      0.57       220
+         vui       0.45      0.45      0.45       226
+
+    accuracy                           0.45       792
+   macro avg       0.44      0.44      0.42       792
+weighted avg       0.45      0.45      0.43       792

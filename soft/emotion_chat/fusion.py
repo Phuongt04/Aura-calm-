@@ -30,6 +30,11 @@ class FusionResult:
 
     resolution_source: str = "fusion"
     resolution_note:   str = ""
+    top2_emotion:      str = ""
+    top2_conf:         float = 0.0
+    confidence_margin: float = 0.0
+    window_agreement:  float = 1.0
+    is_uncertain:      bool = False
 
     def summary(self) -> str:
         """Chuỗi tóm tắt để in ra console."""
@@ -42,6 +47,14 @@ class FusionResult:
             if self.face_emotion:
                 lines.append(
                     f"  Khuôn mặt : {self.face_emotion.upper()} ({self.face_conf:.1f}%)"
+                )
+            if self.resolution_note:
+                lines.append(f"  Ghi chú   : {self.resolution_note}")
+            if self.top2_emotion:
+                lines.append(
+                    f"  Top-2     : {self.top2_emotion.upper()} "
+                    f"({self.top2_conf:.1f}%), margin={self.confidence_margin:.1f}, "
+                    f"agreement={self.window_agreement:.2f}"
                 )
             return "\n".join(lines)
 

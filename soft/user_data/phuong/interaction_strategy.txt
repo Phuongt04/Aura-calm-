@@ -1,0 +1,20 @@
+[Long-Term Personalized Interaction Strategy]
+User: funfun (phuong)
+Sessions observed: 3
+Dominant emotion pattern: gian
+Privacy mode: local-first memory; do not reveal private memory unless helpful and natural.
+
+Preferred communication style:
+- động viên tích cực
+
+Styles to reduce:
+- hỏi nhiều hơn
+
+Emotion-aware guidance:
+- Stay calm, concise, and non-judgmental.
+- Help the user name the problem before suggesting action.
+
+Recent recurring topics:
+- thoát
+- thoát dừng lại
+- thoát dừng lại stop

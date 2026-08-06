@@ -1,0 +1,123 @@
+{
+  "classes": [
+    "binhthuong",
+    "buon",
+    "gian",
+    "vui"
+  ],
+  "confusion_matrix": [
+    [
+      443,
+      6,
+      9,
+      4
+    ],
+    [
+      7,
+      447,
+      8,
+      5
+    ],
+    [
+      7,
+      0,
+      455,
+      5
+    ],
+    [
+      10,
+      3,
+      14,
+      439
+    ]
+  ],
+  "confusion_matrix_percent": [
+    [
+      95.88744588744589,
+      1.2987012987012987,
+      1.948051948051948,
+      0.8658008658008658
+    ],
+    [
+      1.4989293361884368,
+      95.71734475374733,
+      1.7130620985010707,
+      1.070663811563169
+    ],
+    [
+      1.4989293361884368,
+      0.0,
+      97.4304068522484,
+      1.070663811563169
+    ],
+    [
+      2.1459227467811157,
+      0.6437768240343348,
+      3.004291845493562,
+      94.20600858369099
+    ]
+  ],
+  "overall_accuracy": 0.958109559613319,
+  "fold_metrics": [
+    {
+      "fold": 1,
+      "val_samples": 375,
+      "accuracy": 0.968,
+      "model_path": "D:\\HAHA\\cv_audio_runs\\fold_1\\best_model_fold_1.h5"
+    },
+    {
+      "fold": 2,
+      "val_samples": 374,
+      "accuracy": 0.9732620320855615,
+      "model_path": "D:\\HAHA\\cv_audio_runs\\fold_2\\best_model_fold_2.h5"
+    },
+    {
+      "fold": 3,
+      "val_samples": 371,
+      "accuracy": 0.9487870619946092,
+      "model_path": "D:\\HAHA\\cv_audio_runs\\fold_3\\best_model_fold_3.h5"
+    },
+    {
+      "fold": 4,
+      "val_samples": 371,
+      "accuracy": 0.954177897574124,
+      "model_path": "D:\\HAHA\\cv_audio_runs\\fold_4\\best_model_fold_4.h5"
+    },
+    {
+      "fold": 5,
+      "val_samples": 371,
+      "accuracy": 0.9460916442048517,
+      "model_path": "D:\\HAHA\\cv_audio_runs\\fold_5\\best_model_fold_5.h5"
+    }
+  ],
+  "per_class": [
+    {
+      "class": "binhthuong",
+      "support": 462,
+      "precision": 0.9486081370449678,
+      "recall": 0.9588744588744589,
+      "f1": 0.953713670613563
+    },
+    {
+      "class": "buon",
+      "support": 467,
+      "precision": 0.9802631578947368,
+      "recall": 0.9571734475374732,
+      "f1": 0.9685807150595882
+    },
+    {
+      "class": "gian",
+      "support": 467,
+      "precision": 0.9362139917695473,
+      "recall": 0.974304068522484,
+      "f1": 0.9548793284365162
+    },
+    {
+      "class": "vui",
+      "support": 466,
+      "precision": 0.9690949227373068,
+      "recall": 0.9420600858369099,
+      "f1": 0.955386289445049
+    }
+  ]
+}

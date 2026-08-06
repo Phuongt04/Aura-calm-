@@ -63,12 +63,14 @@ class SessionLog:
             conflict_key=result.conflict_key,
         )
 
-    def add_turn(self, role: str, content: str) -> None:
+    def add_turn(self, role: str, content: str, **metadata) -> None:
         """
         Thêm 1 lượt hội thoại.
         Chỉ giữ MAX_HISTORY_TURNS lượt gần nhất để tiết kiệm dung lượng.
         """
-        self.turns.append({"role": role, "content": content})
+        item = {"role": role, "content": content}
+        item.update(metadata)
+        self.turns.append(item)
         cap = cfg.MAX_HISTORY_TURNS * 2   # mỗi "lượt" = 1 user + 1 assistant
         if len(self.turns) > cap:
             self.turns = self.turns[-cap:]

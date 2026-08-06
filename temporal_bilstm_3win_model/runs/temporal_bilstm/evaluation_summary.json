@@ -1,0 +1,23 @@
+{
+  "model_name": "Temporal_BiLSTM_3Window_SER",
+  "label_order": [
+    "neutral",
+    "happy",
+    "sad",
+    "angry"
+  ],
+  "input_shape": [
+    3,
+    64
+  ],
+  "train_utterances": 113,
+  "validation_utterances": 26,
+  "test_utterances": 30,
+  "train_triplets": 376,
+  "validation_triplets": 97,
+  "test_triplets": 101,
+  "best_epoch": 9,
+  "best_validation_macro_f1": 0.6568181818181817,
+  "best_model": "/kaggle/working/voice-emotion-code/models/temporal_bilstm_3win_best.keras",
+  "final_model": "/kaggle/working/voice-emotion-code/models/temporal_bilstm_3win_final.keras"
+}

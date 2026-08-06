@@ -1,0 +1,31 @@
+{
+  "user_id": "phuong",
+  "display_name": "funfun",
+  "updated_at": "2026-06-27T12:54:44.872487+00:00",
+  "total_sessions": 3,
+  "dominant_emotion": "gian",
+  "emotion_counts": {
+    "gian": 3
+  },
+  "voice_emotion_counts": {
+    "gian": 3
+  },
+  "face_emotion_counts": {},
+  "conflict_patterns": {},
+  "preferred_styles": [
+    "động viên tích cực"
+  ],
+  "styles_to_avoid": [
+    "hỏi nhiều hơn"
+  ],
+  "recent_topics": [
+    "thoát",
+    "thoát dừng lại",
+    "thoát dừng lại stop"
+  ],
+  "interaction_guidance": [
+    "Stay calm, concise, and non-judgmental.",
+    "Help the user name the problem before suggesting action."
+  ],
+  "privacy_mode": "local-first"
+}

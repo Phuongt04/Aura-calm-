@@ -1,0 +1,7 @@
+{
+  "min_p_angry": 0.3,
+  "happy_angry_margin": 0.1,
+  "val_macro_f1": 0.8714189233861226,
+  "val_angry_recall": 0.8886363636363637,
+  "val_angry_score": 1.1380098324770316
+}

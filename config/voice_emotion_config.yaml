@@ -1,0 +1,47 @@
+audio:
+  sample_rate: 16000
+  duration_seconds: 4.0
+  n_fft: 512
+  win_length: 400
+  hop_length: 160
+  n_mels: 64
+  fmin: 50
+  fmax: 8000
+
+split:
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  random_seed: 42
+
+training:
+  batch_size: 16
+  stage1_epochs: 60
+  stage1_learning_rate: 0.0003
+  stage2_epochs: 20
+  stage2_learning_rate: 0.00001
+  label_smoothing: 0.05
+  early_stopping_patience: 8
+
+augmentation:
+  enabled: true
+  gain_min: 0.8
+  gain_max: 1.2
+  time_shift_ms: 200
+  time_stretch_min: 0.95
+  time_stretch_max: 1.05
+  pitch_shift_max_semitones: 1
+  noise_snr_min: 15
+  noise_snr_max: 30
+  frequency_mask_max: 8
+  time_mask_max: 20
+
+sampling:
+  tess_weight: 0.25
+  vietnamese_kaggle_weight: 0.55
+  self_recorded_weight: 0.20
+
+inference:
+  confidence_threshold: 0.60
+  margin_threshold: 0.15
+  window_overlap: 0.50

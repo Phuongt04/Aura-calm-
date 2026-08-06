@@ -1,0 +1,115 @@
+{
+  "dataset_folder": "D:\\Aura clam\\soft\\dataset",
+  "num_samples": 1862,
+  "num_classes": 4,
+  "classes": [
+    "binhthuong",
+    "buon",
+    "gian",
+    "vui"
+  ],
+  "class_counts": {
+    "binhthuong": 462,
+    "buon": 467,
+    "gian": 467,
+    "vui": 466
+  },
+  "num_folds": 5,
+  "folds": [
+    {
+      "fold": 1,
+      "train_samples": 1487,
+      "val_samples": 375,
+      "best_val_accuracy": 0.9386666417121887,
+      "best_val_loss": 0.171600341796875,
+      "best_epoch": 30,
+      "best_model_path": "D:\\Aura clam\\cv_audio_runs\\fold_1\\best_model_fold_1.h5",
+      "augmentation_enabled": true,
+      "class_weights": {
+        "binhthuong": 1.0074526071548462,
+        "buon": 0.9966487884521484,
+        "gian": 0.9966487884521484,
+        "vui": 0.9993279576301575
+      }
+    },
+    {
+      "fold": 2,
+      "train_samples": 1488,
+      "val_samples": 374,
+      "best_val_accuracy": 0.9465240836143494,
+      "best_val_loss": 0.15247593820095062,
+      "best_epoch": 60,
+      "best_model_path": "D:\\Aura clam\\cv_audio_runs\\fold_2\\best_model_fold_2.h5",
+      "augmentation_enabled": true,
+      "class_weights": {
+        "binhthuong": 1.0081300735473633,
+        "buon": 0.9973190426826477,
+        "gian": 0.9973190426826477,
+        "vui": 0.9973190426826477
+      }
+    },
+    {
+      "fold": 3,
+      "train_samples": 1491,
+      "val_samples": 371,
+      "best_val_accuracy": 0.9353099465370178,
+      "best_val_loss": 0.1683378368616104,
+      "best_epoch": 21,
+      "best_model_path": "D:\\Aura clam\\cv_audio_runs\\fold_3\\best_model_fold_3.h5",
+      "augmentation_enabled": true,
+      "class_weights": {
+        "binhthuong": 1.007432460784912,
+        "buon": 0.9966577291488647,
+        "gian": 0.9966577291488647,
+        "vui": 0.9993297457695007
+      }
+    },
+    {
+      "fold": 4,
+      "train_samples": 1491,
+      "val_samples": 371,
+      "best_val_accuracy": 0.9407008290290833,
+      "best_val_loss": 0.1714944690465927,
+      "best_epoch": 40,
+      "best_model_path": "D:\\Aura clam\\cv_audio_runs\\fold_4\\best_model_fold_4.h5",
+      "augmentation_enabled": true,
+      "class_weights": {
+        "binhthuong": 1.007432460784912,
+        "buon": 0.9966577291488647,
+        "gian": 0.9966577291488647,
+        "vui": 0.9993297457695007
+      }
+    },
+    {
+      "fold": 5,
+      "train_samples": 1491,
+      "val_samples": 371,
+      "best_val_accuracy": 0.9326145648956299,
+      "best_val_loss": 0.15914471447467804,
+      "best_epoch": 18,
+      "best_model_path": "D:\\Aura clam\\cv_audio_runs\\fold_5\\best_model_fold_5.h5",
+      "augmentation_enabled": true,
+      "class_weights": {
+        "binhthuong": 1.007432460784912,
+        "buon": 0.9966577291488647,
+        "gian": 0.9966577291488647,
+        "vui": 0.9993297457695007
+      }
+    }
+  ],
+  "mean_val_accuracy": 0.9387632131576538,
+  "std_val_accuracy": 0.004769186877407782,
+  "mean_val_loss": 0.16461066007614136,
+  "std_val_loss": 0.007579740887330552,
+  "median_best_epoch": 30,
+  "best_cv_model_path": "D:\\Aura clam\\best_model_improved.h5",
+  "best_cv_fold": 2,
+  "augmentation_enabled": true,
+  "augmentation": {
+    "noise_max_std": 0.025,
+    "gain_min": 0.85,
+    "gain_max": 1.15,
+    "freq_mask_max": 8,
+    "time_mask_max": 8
+  }
+}

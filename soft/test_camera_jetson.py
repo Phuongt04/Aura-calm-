@@ -1,39 +1,36 @@
 from __future__ import annotations
 
-import argparse
-import time
 from collections import deque
-from pathlib import Path
+import time
 
 import cv2
 import numpy as np
 import tensorflow as tf
 
 
-CLASSES = ["angry", "happy", "normal", "sad"]
+MODEL_PATH = "/mnt/mone_usb/MONE/model/vision_emotion_model_tf210.h5"
+classes = ["angry", "happy", "normal", "sad"]
 IMG_SIZE = 224
-VOTE_WINDOW = 10
+CAMERA_INDEX = 0
+HEADLESS = False
+INFERENCE_INTERVAL = 0.25
+EXPECTED_INPUT_SHAPE = (None, 224, 224, 3)
+EXPECTED_OUTPUT_SHAPE = (None, 4)
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Jetson-compatible camera test for facial emotion recognition.")
-    parser.add_argument("--model", default="vision_emotion_model_compatible.h5", help="Path to Keras H5 model.")
-    parser.add_argument("--camera-index", type=int, default=0, help="V4L2 camera index.")
-    parser.add_argument("--headless", action="store_true", help="Disable cv2.imshow() for headless runs.")
-    parser.add_argument("--width", type=int, default=0, help="Optional camera frame width.")
-    parser.add_argument("--height", type=int, default=0, help="Optional camera frame height.")
-    return parser.parse_args()
+def validate_model(model) -> None:
+    print("TensorFlow version:", tf.__version__)
+    print("Model input shape:", model.input_shape)
+    print("Model output shape:", model.output_shape)
+    print("Model params:", model.count_params())
+    print("Classes:", classes)
 
-
-def load_model(model_path: Path):
-    if not model_path.exists():
-        raise FileNotFoundError("Model file not found: {}".format(model_path))
-    model = tf.keras.models.load_model(str(model_path), compile=False)
-    print("Loaded model:", model_path)
-    print("Input shape:", model.input_shape)
-    print("Output shape:", model.output_shape)
-    print("Classes:", CLASSES)
-    return model
+    if tuple(model.input_shape) != EXPECTED_INPUT_SHAPE:
+        raise RuntimeError("Invalid input shape: {}. Expected: {}".format(model.input_shape, EXPECTED_INPUT_SHAPE))
+    if tuple(model.output_shape) != EXPECTED_OUTPUT_SHAPE:
+        raise RuntimeError("Invalid output shape: {}. Expected: {}".format(model.output_shape, EXPECTED_OUTPUT_SHAPE))
+    if len(classes) != model.output_shape[-1]:
+        raise RuntimeError("Class count {} does not match model output {}".format(len(classes), model.output_shape[-1]))
 
 
 def load_face_detector():
@@ -44,19 +41,35 @@ def load_face_detector():
     return face_cascade
 
 
-def preprocess_face(face_bgr: np.ndarray) -> np.ndarray:
+def open_camera():
+    cap = cv2.VideoCapture(CAMERA_INDEX, cv2.CAP_V4L2)
+    backend = "CAP_V4L2"
+    if not cap.isOpened():
+        cap.release()
+        cap = cv2.VideoCapture(CAMERA_INDEX)
+        backend = "default"
+    return cap, backend
+
+
+def preprocess_face(face_bgr):
     face_rgb = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
     face_resized = cv2.resize(face_rgb, (IMG_SIZE, IMG_SIZE))
     face_array = face_resized.astype("float32") / 255.0
     return np.expand_dims(face_array, axis=0)
 
 
-def predict_probs(model, face_bgr: np.ndarray):
+def predict_probs(model, face_bgr):
     x = preprocess_face(face_bgr)
     start = time.perf_counter()
-    probs = model.predict(x, verbose=0)[0].astype("float32")
+    probs = model.predict(x, verbose=0)[0]
     inference_ms = (time.perf_counter() - start) * 1000.0
-    return probs, inference_ms
+
+    if probs.shape != (len(classes),):
+        raise RuntimeError("Invalid prediction shape: {}".format(probs.shape))
+    if not np.all(np.isfinite(probs)):
+        raise RuntimeError("Prediction contains NaN or Inf")
+
+    return probs.astype("float32"), inference_ms
 
 
 def largest_face(faces):
@@ -75,28 +88,34 @@ def draw_label(frame, box, label):
 
 
 def main() -> int:
-    args = parse_args()
-    model = load_model(Path(args.model).resolve())
+    load_start = time.perf_counter()
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+    model_load_ms = (time.perf_counter() - load_start) * 1000.0
+    print("Model load time: {:.1f} ms".format(model_load_ms))
+    validate_model(model)
+
+    dummy = np.zeros((1, IMG_SIZE, IMG_SIZE, 3), dtype=np.float32)
+    model.predict(dummy, verbose=0)
+    print("Model warm-up done.")
+
     face_cascade = load_face_detector()
-
-    cap = cv2.VideoCapture(args.camera_index, cv2.CAP_V4L2)
-    if args.width > 0:
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
-    if args.height > 0:
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
-
+    cap, backend = open_camera()
+    print("Camera backend:", backend)
     if not cap.isOpened():
-        print("Could not open camera index {} with CAP_V4L2.".format(args.camera_index))
+        print("Could not open camera index {}.".format(CAMERA_INDEX))
         return 1
 
     window_name = "Jetson Facial Emotion Recognition"
-    if not args.headless:
+    if not HEADLESS:
         cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
 
-    prob_window = deque(maxlen=VOTE_WINDOW)
-    prev_time = time.perf_counter()
+    probability_window = deque(maxlen=10)
     printed_size = False
+    prev_time = time.perf_counter()
+    last_inference_time = 0.0
     last_inference_ms = 0.0
+    last_label = ""
+    frame_count = 0
 
     print("Camera started. Press 'q' to quit.")
     try:
@@ -104,18 +123,20 @@ def main() -> int:
             ret, frame = cap.read()
             if not ret or frame is None or frame.size == 0:
                 print("Empty frame or camera read failed.")
-                break
+                continue
 
+            frame_count += 1
             if not printed_size:
-                print("Original camera frame size:", frame.shape)
+                print("Frame size:", frame.shape)
                 printed_size = True
 
             frame = cv2.flip(frame, 1)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=5, minSize=(80, 80))
             face_box = largest_face(faces)
+            now = time.perf_counter()
 
-            if face_box is not None:
+            if face_box is not None and now - last_inference_time >= INFERENCE_INTERVAL:
                 x, y, w, h = face_box
                 margin = 10
                 x1 = max(0, x - margin)
@@ -126,40 +147,46 @@ def main() -> int:
 
                 if face.size != 0:
                     probs, last_inference_ms = predict_probs(model, face)
-                    prob_window.append(probs)
-
-                    mean_probs = np.mean(np.stack(prob_window, axis=0), axis=0)
+                    last_inference_time = now
+                    probability_window.append(probs)
+                    mean_probs = np.mean(np.stack(probability_window, axis=0), axis=0)
                     final_idx = int(np.argmax(mean_probs))
-                    final_emotion = CLASSES[final_idx]
-                    confidence = float(mean_probs[final_idx])
-                    label = "{}: {:.2f}%".format(final_emotion, confidence * 100.0)
-                    draw_label(frame, (x1, y1, x2, y2), label)
+                    final_emotion = classes[final_idx]
+                    final_confidence = float(mean_probs[final_idx])
+                    last_label = "{}: {:.2f}%".format(final_emotion, final_confidence * 100.0)
+
+            if face_box is not None and last_label:
+                x, y, w, h = face_box
+                x1 = max(0, x - 10)
+                y1 = max(0, y - 10)
+                x2 = min(frame.shape[1], x + w + 10)
+                y2 = min(frame.shape[0], y + h + 10)
+                draw_label(frame, (x1, y1, x2, y2), last_label)
 
             current_time = time.perf_counter()
-            frame_dt = current_time - prev_time
+            dt = current_time - prev_time
             prev_time = current_time
-            fps = 1.0 / frame_dt if frame_dt > 0 else 0.0
+            fps = 1.0 / dt if dt > 0 else 0.0
 
-            cv2.putText(frame, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-            cv2.putText(
-                frame,
-                "Infer: {:.1f} ms".format(last_inference_ms),
-                (10, 65),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (0, 255, 255),
-                2,
-            )
-
-            if args.headless:
-                print("FPS: {:.2f}, inference: {:.1f} ms".format(fps, last_inference_ms))
+            if HEADLESS:
+                if frame_count % 10 == 0:
+                    print(
+                        "frames={}, label={}, FPS={:.2f}, inference={:.1f} ms".format(
+                            frame_count, last_label or "no-face", fps, last_inference_ms
+                        )
+                    )
             else:
+                cv2.putText(frame, "FPS: {:.2f}".format(fps), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+                cv2.putText(frame, "Infer: {:.1f} ms".format(last_inference_ms), (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+                cv2.putText(frame, "Frames: {}".format(frame_count), (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
                 cv2.imshow(window_name, frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
+    except KeyboardInterrupt:
+        print("Interrupted by user.")
     finally:
         cap.release()
-        if not args.headless:
+        if not HEADLESS:
             cv2.destroyAllWindows()
 
     return 0

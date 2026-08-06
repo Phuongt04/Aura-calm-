@@ -1,0 +1,2 @@
+model,test_samples,accuracy,macro_f1,weighted_f1,mean_confidence_qs,mean_qs_correct,mean_qs_incorrect
+CNN-GRU encoder + Temporal BiLSTM,30,0.6666666666666666,0.6381944444444444,0.6516666666666667,0.7007360458374023,0.7804285287857056,0.5413511991500854

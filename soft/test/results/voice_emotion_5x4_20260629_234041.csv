@@ -1,0 +1,21 @@
+﻿stt,emotion_true,run,file,emotion_pred,confidence_percent,windows,duration_sec,rms,peak,result
+1,binhthuong,1,data\binhthuong\5_NHÓM CÂU TẮC KÈ HOA_4_20260127_150836.wav,vui,77.34,1,3.0,0.018846,0.175066,Sai
+2,binhthuong,2,data\binhthuong\6_Trời mưa_Bình Thường_20260127_151335.wav,vui,85.88,1,3.0,0.01644,0.137523,Sai
+3,binhthuong,3,data\binhthuong\7_Thôi được rồi_Bình thường_20260127_151556.wav,vui,72.48,1,3.0,0.009556,0.106199,Sai
+4,binhthuong,4,data\binhthuong\8_Đợi tôi một chút nhé_Bình thường_20260127_152019.wav,vui,84.26,1,3.0,0.015247,0.154576,Sai
+5,binhthuong,5,data\binhthuong\9_Cũng bình thường thôi_Bình thường_20260127_152124.wav,vui,90.47,1,3.0,0.011839,0.131967,Sai
+6,buon,1,data\buon\5_NHÓM CÂU TẮC KÈ HOA_2_20260127_150813.wav,vui,88.88,1,3.0,0.020227,0.240028,Sai
+7,buon,2,data\buon\6_Trời mưa_Buồn_20260127_151255.wav,vui,79.21,1,3.0,0.013418,0.117498,Sai
+8,buon,3,data\buon\7_Thôi được rồi_Buồn_20260127_151503.wav,vui,82.21,1,3.0,0.011707,0.139834,Sai
+9,buon,4,data\buon\8_Đợi tôi một chút nhé_buồn_20260127_151708.wav,vui,88.25,1,3.0,0.012158,0.128886,Sai
+10,buon,5,data\buon\9_Cũng bình thường thôi_Buồn_20260127_152059.wav,vui,78.76,1,3.0,0.014273,0.123032,Sai
+11,gian,1,data\gian\5_NHÓM CÂU TẮC KÈ HOA_3_20260127_150822.wav,vui,86.51,1,3.0,0.019406,0.155519,Sai
+12,gian,2,data\gian\6_Trời mưa_Giận_20260127_151314.wav,vui,51.96,1,3.0,0.019689,0.148107,Sai
+13,gian,3,data\gian\7_Thôi được rồi_Giận_20260127_151517.wav,vui,57.28,1,3.0,0.027866,0.379645,Sai
+14,gian,4,data\gian\8_Đợi tôi một chút nhé_Giận_20260127_152004.wav,vui,73.77,1,3.0,0.02277,0.271893,Sai
+15,gian,5,data\gian\9_Cũng bình thường thôi_Giận_20260127_152112.wav,vui,76.89,1,3.0,0.011392,0.08738,Sai
+16,vui,1,data\vui\5_NHÓM CÂU TẮC KÈ HOA_1_20260127_150802.wav,vui,75.46,1,3.0,0.020773,0.2032,Dung
+17,vui,2,data\vui\6_Trời mưa_ Vui_20260127_151237.wav,vui,83.39,1,3.0,0.02108,0.200349,Dung
+18,vui,3,data\vui\7_Thôi được rồi_Vui_20260127_151408.wav,vui,56.54,1,3.0,0.039976,0.315949,Dung
+19,vui,4,data\vui\8_Đợi tôi một chút nhé_vui_20260127_151653.wav,vui,85.69,1,3.0,0.016408,0.169026,Dung
+20,vui,5,data\vui\9_Cũng bình thường thôi_Vui_20260127_152049.wav,vui,90.7,1,3.0,0.028946,0.146805,Dung

@@ -1,0 +1,304 @@
+{
+  "summary": {
+    "total": 20,
+    "correct": 5,
+    "wrong": 15,
+    "accuracy_percent": 25.0,
+    "per_emotion": {
+      "binhthuong": {
+        "total": 5,
+        "correct": 0,
+        "accuracy_percent": 0.0,
+        "predicted_counts": {
+          "vui": 5
+        }
+      },
+      "buon": {
+        "total": 5,
+        "correct": 0,
+        "accuracy_percent": 0.0,
+        "predicted_counts": {
+          "vui": 5
+        }
+      },
+      "gian": {
+        "total": 5,
+        "correct": 0,
+        "accuracy_percent": 0.0,
+        "predicted_counts": {
+          "vui": 5
+        }
+      },
+      "vui": {
+        "total": 5,
+        "correct": 5,
+        "accuracy_percent": 100.0,
+        "predicted_counts": {
+          "vui": 5
+        }
+      }
+    }
+  },
+  "rows": [
+    {
+      "stt": 1,
+      "emotion_true": "binhthuong",
+      "run": 1,
+      "file": "data\\binhthuong\\5_NHÓM CÂU TẮC KÈ HOA_4_20260127_150836.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 77.34,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.018846,
+      "peak": 0.175066,
+      "result": "Sai"
+    },
+    {
+      "stt": 2,
+      "emotion_true": "binhthuong",
+      "run": 2,
+      "file": "data\\binhthuong\\6_Trời mưa_Bình Thường_20260127_151335.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 85.88,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.01644,
+      "peak": 0.137523,
+      "result": "Sai"
+    },
+    {
+      "stt": 3,
+      "emotion_true": "binhthuong",
+      "run": 3,
+      "file": "data\\binhthuong\\7_Thôi được rồi_Bình thường_20260127_151556.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 72.48,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.009556,
+      "peak": 0.106199,
+      "result": "Sai"
+    },
+    {
+      "stt": 4,
+      "emotion_true": "binhthuong",
+      "run": 4,
+      "file": "data\\binhthuong\\8_Đợi tôi một chút nhé_Bình thường_20260127_152019.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 84.26,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.015247,
+      "peak": 0.154576,
+      "result": "Sai"
+    },
+    {
+      "stt": 5,
+      "emotion_true": "binhthuong",
+      "run": 5,
+      "file": "data\\binhthuong\\9_Cũng bình thường thôi_Bình thường_20260127_152124.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 90.47,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.011839,
+      "peak": 0.131967,
+      "result": "Sai"
+    },
+    {
+      "stt": 6,
+      "emotion_true": "buon",
+      "run": 1,
+      "file": "data\\buon\\5_NHÓM CÂU TẮC KÈ HOA_2_20260127_150813.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 88.88,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.020227,
+      "peak": 0.240028,
+      "result": "Sai"
+    },
+    {
+      "stt": 7,
+      "emotion_true": "buon",
+      "run": 2,
+      "file": "data\\buon\\6_Trời mưa_Buồn_20260127_151255.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 79.21,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.013418,
+      "peak": 0.117498,
+      "result": "Sai"
+    },
+    {
+      "stt": 8,
+      "emotion_true": "buon",
+      "run": 3,
+      "file": "data\\buon\\7_Thôi được rồi_Buồn_20260127_151503.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 82.21,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.011707,
+      "peak": 0.139834,
+      "result": "Sai"
+    },
+    {
+      "stt": 9,
+      "emotion_true": "buon",
+      "run": 4,
+      "file": "data\\buon\\8_Đợi tôi một chút nhé_buồn_20260127_151708.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 88.25,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.012158,
+      "peak": 0.128886,
+      "result": "Sai"
+    },
+    {
+      "stt": 10,
+      "emotion_true": "buon",
+      "run": 5,
+      "file": "data\\buon\\9_Cũng bình thường thôi_Buồn_20260127_152059.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 78.76,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.014273,
+      "peak": 0.123032,
+      "result": "Sai"
+    },
+    {
+      "stt": 11,
+      "emotion_true": "gian",
+      "run": 1,
+      "file": "data\\gian\\5_NHÓM CÂU TẮC KÈ HOA_3_20260127_150822.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 86.51,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.019406,
+      "peak": 0.155519,
+      "result": "Sai"
+    },
+    {
+      "stt": 12,
+      "emotion_true": "gian",
+      "run": 2,
+      "file": "data\\gian\\6_Trời mưa_Giận_20260127_151314.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 51.96,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.019689,
+      "peak": 0.148107,
+      "result": "Sai"
+    },
+    {
+      "stt": 13,
+      "emotion_true": "gian",
+      "run": 3,
+      "file": "data\\gian\\7_Thôi được rồi_Giận_20260127_151517.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 57.28,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.027866,
+      "peak": 0.379645,
+      "result": "Sai"
+    },
+    {
+      "stt": 14,
+      "emotion_true": "gian",
+      "run": 4,
+      "file": "data\\gian\\8_Đợi tôi một chút nhé_Giận_20260127_152004.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 73.77,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.02277,
+      "peak": 0.271893,
+      "result": "Sai"
+    },
+    {
+      "stt": 15,
+      "emotion_true": "gian",
+      "run": 5,
+      "file": "data\\gian\\9_Cũng bình thường thôi_Giận_20260127_152112.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 76.89,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.011392,
+      "peak": 0.08738,
+      "result": "Sai"
+    },
+    {
+      "stt": 16,
+      "emotion_true": "vui",
+      "run": 1,
+      "file": "data\\vui\\5_NHÓM CÂU TẮC KÈ HOA_1_20260127_150802.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 75.46,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.020773,
+      "peak": 0.2032,
+      "result": "Dung"
+    },
+    {
+      "stt": 17,
+      "emotion_true": "vui",
+      "run": 2,
+      "file": "data\\vui\\6_Trời mưa_ Vui_20260127_151237.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 83.39,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.02108,
+      "peak": 0.200349,
+      "result": "Dung"
+    },
+    {
+      "stt": 18,
+      "emotion_true": "vui",
+      "run": 3,
+      "file": "data\\vui\\7_Thôi được rồi_Vui_20260127_151408.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 56.54,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.039976,
+      "peak": 0.315949,
+      "result": "Dung"
+    },
+    {
+      "stt": 19,
+      "emotion_true": "vui",
+      "run": 4,
+      "file": "data\\vui\\8_Đợi tôi một chút nhé_vui_20260127_151653.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 85.69,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.016408,
+      "peak": 0.169026,
+      "result": "Dung"
+    },
+    {
+      "stt": 20,
+      "emotion_true": "vui",
+      "run": 5,
+      "file": "data\\vui\\9_Cũng bình thường thôi_Vui_20260127_152049.wav",
+      "emotion_pred": "vui",
+      "confidence_percent": 90.7,
+      "windows": 1,
+      "duration_sec": 3.0,
+      "rms": 0.028946,
+      "peak": 0.146805,
+      "result": "Dung"
+    }
+  ]
+}

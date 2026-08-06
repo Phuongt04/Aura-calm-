@@ -31,12 +31,12 @@ def build(profile: UserProfile, recent_sessions: list[SessionLog]) -> str:
     # User is new and has no history
     if profile.total_sessions == 0 and not recent_sessions:
         context_lines.extend([
-            "[New User]",
-            f"This is the first time {profile.display_name} is using the system.",
-            "Please introduce yourself and ask an open-ended question.",
+            "[Người dùng mới]",
+            f"Đây là lần đầu {profile.display_name} sử dụng hệ thống.",
+            "Hãy giới thiệu bản thân ngắn gọn bằng tiếng Việt và hỏi một câu mở.",
         ])
     else:
-        context_lines.append(f"[User Information] - Name: {profile.display_name}")
+        context_lines.append(f"[Thông tin người dùng] - Tên: {profile.display_name}")
 
         # Overall sentiment pattern
         if profile.total_emotions > 0:
@@ -45,30 +45,30 @@ def build(profile: UserProfile, recent_sessions: list[SessionLog]) -> str:
                 dominant_emotion, 0
             )
             context_lines.append(
-                f"Overall sentiment pattern: {dominant_emotion.upper()} "
-                f"({dominant_emotion_count}/{profile.total_emotions} times)"
+                f"Xu hướng cảm xúc chung: {dominant_emotion.upper()} "
+                f"({dominant_emotion_count}/{profile.total_emotions} lần)"
             )
 
         # Common conflict pattern
         if profile.conflict_counts:
             top_conflict = max(profile.conflict_counts, key=profile.conflict_counts.get)
             context_lines.append(
-                f"Common conflict pattern: {top_conflict.replace('_vs_', ' ↔ ')} "
-                f"({profile.conflict_counts[top_conflict]} times)"
+                f"Mẫu xung đột thường gặp: {top_conflict.replace('_vs_', ' ↔ ')} "
+                f"({profile.conflict_counts[top_conflict]} lần)"
             )
 
         preferred_styles = profile.preferred_styles()
         avoided_styles = profile.styles_to_avoid()
         if preferred_styles or avoided_styles:
-            context_lines.append("[Learned Communication Style]")
+            context_lines.append("[Phong cách giao tiếp đã học]")
             if preferred_styles:
-                context_lines.append("Use more of: " + ", ".join(preferred_styles))
+                context_lines.append("Nên dùng nhiều hơn: " + ", ".join(preferred_styles))
             if avoided_styles:
-                context_lines.append("Avoid or reduce: " + ", ".join(avoided_styles))
+                context_lines.append("Nên tránh hoặc giảm: " + ", ".join(avoided_styles))
 
         # Recent session summary
         if recent_sessions:
-            context_lines.append(f"Recent session summary ({len(recent_sessions)} sessions):")
+            context_lines.append(f"Tóm tắt {len(recent_sessions)} phiên gần đây:")
             for i, session in enumerate(recent_sessions, 1):
                 conflict_note = ""
                 if session.is_conflict:
@@ -77,7 +77,7 @@ def build(profile: UserProfile, recent_sessions: list[SessionLog]) -> str:
                     )
                 # Get the last user's turn content to recall the topic
                 user_turns = [turn["content"] for turn in session.turns if turn["role"] == "user"]
-                last_user = f" — topic: {user_turns[-1][:60]}..." if user_turns else ""
+                last_user = f" — chủ đề: {user_turns[-1][:60]}..." if user_turns else ""
                 context_lines.append(
                     f"  Session {i}: {session.final_emotion.upper()}{conflict_note}{last_user}"
                 )
@@ -92,10 +92,10 @@ def build(profile: UserProfile, recent_sessions: list[SessionLog]) -> str:
 
     # Add admin notes
     if profile.notes.strip():
-        context_lines.append(f"Admin Notes: {profile.notes}")
+        context_lines.append(f"Ghi chú quản trị: {profile.notes}")
 
     context_lines.append(
-        "\nBased on the information above, please adjust your responses to fit the user's personality and sentiment patterns."
+        "\nDựa trên thông tin trên, hãy điều chỉnh phản hồi cho hợp với tính cách và xu hướng cảm xúc của người dùng. Luôn trả lời bằng tiếng Việt tự nhiên."
     )
 
     return "\n".join(context_lines) + "\n"

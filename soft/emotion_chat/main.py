@@ -1,28 +1,32 @@
 """
 main.py
 =======
-Điều phối toàn bộ pipeline:
-  1. Nhận dạng người dùng (user_id)
-  2. Nạp model âm thanh (+ mặt nếu bật) + nạp head weights cá nhân hóa
-  3. Thu âm + chụp ảnh → fusion cảm xúc
-  4. Tải lịch sử → xây context cá nhân hóa
-  5. Chat theo kịch bản
-  6. Lưu lịch sử phiên + cập nhật hồ sơ
-  7. Hỏi xác nhận cảm xúc → thêm vào FeedbackBuffer
-  8. Khi buffer đủ INCREMENTAL_TRIGGER_N mẫu → update head ON-DEVICE (không cần PC)
+Main runtime pipeline for MONE:
+  1. Nhận dạng người dùng.
+  2. Nạp model âm thanh và model khuôn mặt nếu bật.
+  3. Thu âm, đọc cảm xúc khuôn mặt nếu có, rồi hợp nhất tín hiệu.
+  4. Xây context cá nhân hóa từ profile/history/summary/long-term memory.
+  5. Chạy vòng chat.
+  6. Lưu lịch sử phiên và cập nhật bộ nhớ cá nhân hóa.
+
+Cá nhân hóa dựa trên ký ức hội thoại, không hỏi người dùng tự gắn nhãn cảm xúc.
 """
 from __future__ import annotations
 
 import os
 import warnings
+import logging
 
 warnings.filterwarnings("ignore")
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 os.environ.setdefault("TF_ENABLE_ONEDNN_OPTS", "0")
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "-1")
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
+from . import audio, chat, face, face_id, voice_io
 from . import config as cfg
-from .model_loader import load_audio_model, load_face_model
-from . import audio, face, face_id, chat, voice_io
+from .emotion_support import EmotionSupportSession
+from .emotion_support.manager import EmotionSupportManager
 from .fusion import (
     FusionResult,
     apply_clarified_emotion,
@@ -30,286 +34,320 @@ from .fusion import (
     fuse,
     infer_emotion_from_reply,
 )
-from .personalization.profile import UserProfile
+from .model_loader import load_audio_model, load_face_model
 from .personalization.history import SessionLog, load_recent
-from .personalization.export import save_emotion_feedback
-from .personalization.summary import update_periodic_summaries
 from .personalization.long_term import update_long_term_personalization
-from .personalization.incremental import (
-    FeedbackBuffer, freeze_backbone, load_user_head, run_incremental_update
-)
+from .personalization.profile import UserProfile
+from .personalization.summary import update_periodic_summaries
 
 
-# ── Nhận dạng người dùng ───────────────────────────────────────────────────
+def _yes(answer: str) -> bool:
+    return answer.strip().lower() in {"y", "yes", "co", "c", "có"}
+
+
+def _say(text: str) -> None:
+    """Speak short user-facing runtime messages."""
+    voice_io.speak(text)
+
+
+def _ask(prompt: str, speak_prompt: str | None = None) -> str:
+    if speak_prompt is not None:
+        _say(speak_prompt)
+    return input(prompt).strip()
+
+
 def _identify_user() -> UserProfile:
-    """
-    Thử nhận dạng qua khuôn mặt trước (nếu FACE_ID_ENABLED).
-    Nếu nhận ra → load hồ sơ ngay, không cần gõ gì.
-    Nếu không nhận ra / tắt face_id → fallback về nhập tay.
-    Người dùng mới được hỏi có muốn đăng ký khuôn mặt không.
-    """
-    print("\n" + "─" * 55)
+    """Nhận dạng bằng Face ID nếu có, nếu không thì hỏi user id."""
+    print("\n" + "-" * 55)
 
-    # ── Thử nhận dạng bằng khuôn mặt ────────────────────────────────────
     if cfg.FACE_ID_ENABLED:
-        print("📷  Đang nhận diện khuôn mặt...")
+        print("[face_id] Đang nhận diện người dùng...")
         uid, conf = face_id.recognize()
         if uid is not None:
             profile = UserProfile.load(uid)
             if profile is not None:
-                print(f"  ✅ Xin chào lại, {profile.display_name}! "
-                      f"(confidence={conf:.1f}, {profile.total_sessions} phiên trước)")
+                greeting = f"Xin chào lại, {profile.display_name}!"
+                print(f"  {greeting} (confidence={conf:.1f}, {profile.total_sessions} phiên trước)")
+                _say(greeting)
                 return profile
 
-    # ── Fallback: nhập tay ───────────────────────────────────────────────
-    user_id = input("👤  Nhập tên/ID của bạn (Enter = 'guest'): ").strip()
+    user_id = _ask(
+        "Nhập tên/ID của bạn (Enter = guest): ",
+        "Nhập tên hoặc ID của bạn. Bấm Enter để dùng guest.",
+    )
     if not user_id:
         user_id = "guest"
     user_id = user_id.lower().replace(" ", "_")
 
     profile = UserProfile.load(user_id)
     if profile is None:
-        display = input(f"  Chưa có hồ sơ cho '{user_id}'. Tên hiển thị: ").strip()
+        display = _ask(
+            f"Chưa có hồ sơ cho '{user_id}'. Tên hiển thị: ",
+            f"Chưa có hồ sơ cho {user_id}. Bạn muốn MONE gọi bạn là gì?",
+        )
         profile = UserProfile.load_or_create(user_id, display or user_id)
-        print(f"  ✅ Đã tạo hồ sơ mới.")
+        print("  Đã tạo hồ sơ mới.")
+        _say(f"Đã tạo hồ sơ mới cho {profile.display_name}.")
 
-        # Hỏi đăng ký khuôn mặt ngay khi tạo hồ sơ mới
         if cfg.FACE_ID_ENABLED:
-            ans = input("  📷  Bạn muốn đăng ký khuôn mặt để lần sau tự nhận diện không? (y/n): ").strip().lower()
-            if ans in {"y", "yes", "có", "co"}:
+            ans = _ask(
+                "Đăng ký khuôn mặt để lần sau tự nhận diện? (y/n): ",
+                "Bạn có muốn đăng ký khuôn mặt để lần sau MONE tự nhận diện không?",
+            )
+            if _yes(ans):
                 face_id.enroll_user(user_id)
     else:
-        print(f"  ✅ Xin chào lại, {profile.display_name}! ({profile.total_sessions} phiên trước)")
+        greeting = f"Xin chào lại, {profile.display_name}!"
+        print(f"  {greeting} ({profile.total_sessions} phiên trước)")
+        _say(greeting)
 
-        # Nếu bật face_id nhưng user chưa đăng ký khuôn mặt
         if cfg.FACE_ID_ENABLED and not face_id.is_enrolled(user_id):
-            ans = input("  📷  Bạn chưa đăng ký khuôn mặt. Đăng ký ngay không? (y/n): ").strip().lower()
-            if ans in {"y", "yes", "có", "co"}:
+            ans = _ask(
+                "Bạn chưa đăng ký khuôn mặt. Đăng ký ngay? (y/n): ",
+                "Bạn chưa đăng ký khuôn mặt. Bạn có muốn đăng ký ngay không?",
+            )
+            if _yes(ans):
                 face_id.enroll_user(user_id)
 
     return profile
 
 
-# ── Hỏi xác nhận cảm xúc + thêm vào FeedbackBuffer ─────────────────────
-def _ask_emotion_feedback(
-    profile:           UserProfile,
-    predicted_emotion: str,
-    audio_features,
-    buffer:            FeedbackBuffer | None,
-) -> str:
-    """
-    Hỏi user xem cảm xúc dự đoán có đúng không.
-    Trả về nhãn đã xác nhận (dù đúng hay sai).
-    """
-    if not cfg.EMOTION_FEEDBACK_ENABLED or audio_features is None:
-        return predicted_emotion
-
-    all_emotions = list(cfg.EMOTION_CONFIG.keys())
-    options      = " / ".join(f"[{i+1}]{e}" for i, e in enumerate(all_emotions))
-    print(f"\n  Hệ thống đoán: {predicted_emotion.upper()}")
-    ans = input(f"  Đúng không? (Enter=Đúng | {options}): ").strip().lower()
-
-    confirmed_label = predicted_emotion
-    if ans not in {"", "y", "yes", "đúng", "dung"}:
-        if ans.isdigit():
-            idx = int(ans) - 1
-            if 0 <= idx < len(all_emotions):
-                confirmed_label = all_emotions[idx]
-        elif ans in all_emotions:
-            confirmed_label = ans
-        if confirmed_label != predicted_emotion:
-            print(f"  → Nhãn đã sửa: {confirmed_label.upper()} — cảm ơn!")
-
-    # Lưu feedback text
-    save_emotion_feedback(
-        profile.user_id,
-        audio_features,
-        predicted_label=predicted_emotion,
-        corrected_label=confirmed_label,
-        confirmed_by_user=(confirmed_label == predicted_emotion),
-    )
-
-    # Thêm vào buffer on-device
-    if buffer is not None and cfg.INCREMENTAL_ENABLED:
-        count = buffer.add(audio_features, confirmed_label)
-        remaining = cfg.INCREMENTAL_TRIGGER_N - count
-        if remaining > 0:
-            print(f"  📊  Buffer: {count}/{cfg.INCREMENTAL_TRIGGER_N} mẫu "
-                  f"(cần thêm {remaining} để cập nhật model)")
-        else:
-            print(f"  📊  Buffer đủ {count} mẫu — sẵn sàng cập nhật!")
-
-    return confirmed_label
-
-
 def _ask_style_feedback(profile: UserProfile) -> None:
-    """Occasionally learn which response style fits this user."""
+    """Thỉnh thoảng học kiểu phản hồi phù hợp với người dùng."""
     if not cfg.STYLE_FEEDBACK_ENABLED:
         return
     if cfg.STYLE_FEEDBACK_EVERY_N <= 0:
         return
-    if profile.total_sessions == 0 or profile.total_sessions % cfg.STYLE_FEEDBACK_EVERY_N != 0:
+    if profile.total_sessions == 0:
+        return
+    if profile.total_sessions % cfg.STYLE_FEEDBACK_EVERY_N != 0:
         return
 
     styles = {
-        "1": "ngan gon",
-        "2": "diu nhe dong cam",
-        "3": "hoi nhieu hon",
-        "4": "dong vien tich cuc",
-        "5": "thang vao van de",
+        "1": "ngắn gọn",
+        "2": "dịu nhẹ đồng cảm",
+        "3": "hỏi nhiều hơn",
+        "4": "động viên tích cực",
+        "5": "thẳng vào vấn đề",
     }
-    print("\n  [ca nhan hoa] Cach MONE noi chuyen vua roi co hop voi ban khong?")
-    print("  Chon kieu nen dung them: [1]ngan gon [2]diu nhe [3]hoi nhieu [4]dong vien [5]thang van de")
-    ans = input("  Enter=bo qua | so=ghi nho: ").strip()
+    print("\n[cá nhân hóa] Cách MONE nói chuyện vừa rồi có hợp với bạn không?")
+    print("Chọn kiểu nên dùng thêm: [1]ngắn gọn [2]dịu nhẹ [3]hỏi nhiều [4]động viên [5]thẳng vấn đề")
+    _say("Cách MONE nói chuyện vừa rồi có hợp với bạn không? Chọn số nếu bạn muốn MONE ghi nhớ.")
+    ans = _ask("Enter=bỏ qua | số=ghi nhớ: ")
     if ans in styles:
         profile.record_style_feedback(preferred=styles[ans])
-        print(f"  [ca nhan hoa] Da ghi nho: {styles[ans]}")
+        print(f"[cá nhân hóa] Đã ghi nhớ: {styles[ans]}")
 
-    avoid = input("  Co kieu nao nen giam khong? (1-5 hoac Enter): ").strip()
+    avoid = _ask(
+        "Có kiểu nào nên giảm không? (1-5 hoặc Enter): ",
+        "Có kiểu nào MONE nên giảm không?",
+    )
     if avoid in styles:
         profile.record_style_feedback(avoid=styles[avoid])
-        print(f"  [ca nhan hoa] Se giam: {styles[avoid]}")
+        print(f"[cá nhân hóa] Sẽ giảm: {styles[avoid]}")
 
 
 def _clarify_conflict(result: FusionResult) -> tuple[FusionResult, str, str]:
-    """
-    Ask one short follow-up question when voice and face conflict.
-    Returns the updated result plus the clarification turn pair.
-    """
+    """Hỏi một câu ngắn khi giọng nói và khuôn mặt bị lệch tín hiệu."""
     if not cfg.CLARIFY_ON_CONFLICT or not result.is_conflict or not result.face_emotion:
         return result, "", ""
 
-    print("\n  [Xung dot] He thong se hoi them 1 cau ngan de xac nhan cam xuc.")
+    print("\n[Xung đột] MONE hỏi thêm 1 câu ngắn để chốt cảm xúc hiện tại.")
     question = build_clarifying_question(result)
-    print(f"  🤖  {question}")
-    answer = input("  👤  ").strip()
+    print(f"MONE: {question}")
+    _say(question)
+    answer = _ask("Bạn: ")
 
     if not answer:
         return result, question, ""
 
     final_emotion, reason = infer_emotion_from_reply(answer, result)
     updated = apply_clarified_emotion(result, final_emotion, reason)
-    print(f"  -> Tam chot: {final_emotion.upper()} ({reason})")
+    print(f"-> Tạm chốt: {final_emotion.upper()} ({reason})")
+    _say(f"MONE tạm chốt cảm xúc hiện tại là {final_emotion}.")
     return updated, question, answer
 
 
-# ── Pipeline chính ────────────────────────────────────────────────────────
+def _load_models():
+    print("\n[Đang nạp model...]")
+    audio_model, audio_classes = load_audio_model()
+    face_model = load_face_model() if cfg.FACE_ENABLED else None
+    print("\n[Tất cả model đã sẵn sàng!]\n")
+    return audio_model, audio_classes, face_model
+
+
+def _detect_emotion(audio_model, audio_classes, face_model) -> FusionResult | str | None:
+    if cfg.WAKE_WORD_ENABLED and not voice_io.wait_for_wake_word():
+        return "stop"
+
+    raw_audio = audio.record()
+    if len(raw_audio) == 0:
+        print("[audio] Chưa phát hiện câu nói. MONE quay lại chế độ chờ.")
+        return None
+
+    rms, peak = audio.quality_stats(raw_audio)
+    noise_ratio = audio.noise_floor_ratio(raw_audio)
+    print(f"[audio] rms={rms:.4f}, peak={peak:.4f}, noise_floor_ratio={noise_ratio:.2f}")
+    if audio.is_too_quiet(raw_audio):
+        print("[audio] Tín hiệu mic quá nhỏ/không rõ. MONE không phân tích AI.")
+        return None
+
+    if audio.is_too_noisy(raw_audio):
+        print("[audio] Moi truong qua on/tin hieu bi nhieu. MONE bo qua doan nay.")
+        return None
+
+    model_audio = audio.prepare_for_model(raw_audio)
+    detail = audio.predict_emotion_sliding_detail(
+        audio_model, audio_classes, model_audio
+    )
+    v_emotion, v_conf, window_count = detail.emotion, detail.confidence, detail.window_count
+    print(
+        f"[audio] sliding windows={window_count}, "
+        f"window={cfg.AUDIO_DURATION:.1f}s, stride={cfg.AUDIO_WINDOW_STRIDE:.1f}s"
+    )
+    print(f"Giọng nói: {v_emotion.upper()} ({v_conf:.1f}%)")
+    print(
+        f"[audio] top2={detail.top2_emotion.upper()} ({detail.top2_confidence:.1f}%), "
+        f"margin={detail.margin:.1f}, agreement={detail.agreement:.2f}, "
+        f"votes={detail.window_votes}"
+    )
+
+    f_emotion, f_conf = None, None
+    if cfg.FACE_ENABLED and face_model is not None:
+        f_emotion, f_conf = face.detect(face_model, cfg.FACE_RAW_CLASSES)
+        if f_emotion:
+            print(f"Khuôn mặt: {f_emotion.upper()} ({f_conf:.1f}%)")
+        else:
+            print("Khuôn mặt: không phát hiện, bỏ qua")
+
+    result = fuse(v_emotion, v_conf, f_emotion, f_conf)
+    result.resolution_source = "confidence_hint"
+    result.top2_emotion = detail.top2_emotion
+    result.top2_conf = detail.top2_confidence
+    result.confidence_margin = detail.margin
+    result.window_agreement = detail.agreement
+    result.is_uncertain = detail.is_uncertain
+    if detail.is_uncertain:
+        result.resolution_note = (
+            f"Top-1 và top-2 còn gần nhau hoặc các cửa sổ chưa đồng thuận; "
+            f"cảm xúc chỉ là gợi ý mềm."
+        )
+    else:
+        result.resolution_note = (
+            f"Độ tin cậy giọng nói {v_conf:.1f}%; tín hiệu cảm xúc dùng như gợi ý."
+        )
+    result, _, _ = _clarify_conflict(result)
+    return result
+
+
+def _support_emotion_to_runtime(value: str) -> str:
+    mapping = {
+        "happy": "vui",
+        "sad": "buon",
+        "angry": "gian",
+        "neutral": "binhthuong",
+    }
+    return mapping.get(value, "")
+
+
+def _run_emotion_support(result: FusionResult, profile: UserProfile | None) -> FusionResult:
+    """Run optional non-contact emotion support before normal chat."""
+    try:
+        user_id = profile.user_id if profile is not None else "guest"
+        profile_sessions = profile.total_sessions if profile is not None else 0
+        manager = EmotionSupportManager()
+        if result.is_uncertain:
+            return result
+        if not manager.should_start_support(
+            result.final_emotion,
+            result.voice_conf,
+            user_id=user_id,
+            profile_total_sessions=profile_sessions,
+        ):
+            return result
+
+        support = EmotionSupportSession(manager=manager)
+        support_result = support.run(result.final_emotion, result.voice_conf, user_id=user_id)
+        confirmed = _support_emotion_to_runtime(support_result.confirmed_emotion)
+        if confirmed and confirmed != result.final_emotion:
+            return apply_clarified_emotion(
+                result,
+                confirmed,
+                "nguoi dung xac nhan lai trong phien ho tro cam xuc",
+            )
+    except Exception as exc:
+        print(f"[emotion_support] Bo qua phien ho tro do loi: {exc}")
+    return result
+
+
 def run() -> None:
     print("=" * 55)
     print("   HỆ THỐNG CHATBOT NHẬN BIẾT CẢM XÚC ĐA NGUỒN")
-    print(f"   Chế độ: {'Giọng nói + Khuôn mặt' if cfg.FACE_ENABLED else 'Giọng nói'}"
-          f" | Cá nhân hóa: {'Bật' if cfg.PERSONALIZATION_ENABLED else 'Tắt'}")
+    print(
+        f"   Chế độ: {'Giọng nói + Khuôn mặt' if cfg.FACE_ENABLED else 'Giọng nói'}"
+        f" | Cá nhân hóa: {'Bật' if cfg.PERSONALIZATION_ENABLED else 'Tắt'}"
+    )
     print("=" * 55)
 
-    # ── Bước 1: Nhận dạng người dùng ─────────────────────────────────────
     profile = _identify_user() if cfg.PERSONALIZATION_ENABLED else None
+    audio_model, audio_classes, face_model = _load_models()
 
-    # ── Bước 2: Nạp model ─────────────────────────────────────────────────
-    print("\n[Đang nạp model...]")
-    audio_model, audio_classes = load_audio_model()
-    face_model = None
-    if cfg.FACE_ENABLED:
-        face_model = load_face_model()
-
-    # Nạp head weights cá nhân hóa + khởi tạo buffer on-device
-    feedback_buffer = None
-    if profile is not None and cfg.INCREMENTAL_ENABLED:
-        freeze_backbone(audio_model)   # đóng băng backbone, chỉ head trainable
-        load_user_head(audio_model, profile.user_id)
-        feedback_buffer = FeedbackBuffer(profile.user_id, audio_classes)
-
-    print("\n[Tất cả model sẵn sàng!]\n")
-
-    # ── Vòng lặp chính ───────────────────────────────────────────────────
     while True:
-        print("\n" + "─" * 55)
-
-        if cfg.WAKE_WORD_ENABLED and not voice_io.wait_for_wake_word():
-            print("Hen gap lai! ")
+        print("\n" + "-" * 55)
+        result = _detect_emotion(audio_model, audio_classes, face_model)
+        if result == "stop":
+            print("Hẹn gặp lại!")
+            _say("Hẹn gặp lại!")
             break
-
-        # Bước 3a: Nhận diện giọng nói — trả luôn features để có thể lưu feedback
-        raw_audio = audio.record()
-        if len(raw_audio) == 0:
-            print("  [audio] Chua phat hien cau noi. MONE quay lai che do cho.")
+        if result is None:
+            if cfg.WAKE_WORD_ENABLED:
+                continue
+            retry = _ask("\nThử lại không? (y/n): ", "Bạn muốn thử lại không?")
+            if not _yes(retry):
+                print("Hẹn gặp lại!")
+                _say("Hẹn gặp lại!")
+                break
             continue
 
-        features  = audio.preprocess(raw_audio)   # (N_FRAMES, H, W, 1)
+        result = _run_emotion_support(result, profile)
 
-        rms, peak = audio.quality_stats(raw_audio)
-        print(f"  [audio] rms={rms:.4f}, peak={peak:.4f}")
-        if audio.is_too_quiet(raw_audio):
-            print("  [audio] Tin hieu mic qua nho/khong ro. MONE khong phan tich AI.")
-            continue
-
-        v_emotion, v_conf, window_count = audio.predict_emotion_sliding(
-            audio_model, audio_classes, raw_audio
-        )
-        print(
-            f"  [audio] sliding windows={window_count}, "
-            f"window={cfg.AUDIO_DURATION:.1f}s, stride={cfg.AUDIO_WINDOW_STRIDE:.1f}s"
-        )
-        print(f"  🎙️  Giọng nói : {v_emotion.upper()} ({v_conf:.1f}%)")
-
-        # Bước 3b: Nhận diện khuôn mặt (nếu bật)
-        f_emotion, f_conf = None, None
-        if cfg.FACE_ENABLED and face_model is not None:
-            f_emotion, f_conf = face.detect(face_model, cfg.FACE_RAW_CLASSES)
-            if f_emotion:
-                print(f"  📷  Khuôn mặt : {f_emotion.upper()} ({f_conf:.1f}%)")
-            else:
-                print("  📷  Khuôn mặt : Không phát hiện — bỏ qua")
-
-        # Bước 4: Kết hợp & xử lý xung đột
-        result = fuse(v_emotion, v_conf, f_emotion, f_conf)
-        result, clarify_question, clarify_answer = _clarify_conflict(result)
-
-        # Bước 5: Tải lịch sử & chuẩn bị session log
         recent_sessions = []
-        session         = None
+        session = None
         if profile is not None:
             recent_sessions = load_recent(profile.user_id)
-            session         = SessionLog.from_fusion(result)
-            if clarify_question:
-                session.add_turn("assistant", clarify_question)
-            if clarify_answer:
-                session.add_turn("user", clarify_answer)
+            session = SessionLog.from_fusion(result)
 
-        # Bước 6: Chat theo kịch bản
-        chat.run(result, profile, session, recent_sessions)
+        result = chat.run(
+            result,
+            profile,
+            session,
+            recent_sessions,
+            audio_model=audio_model,
+            audio_classes=audio_classes,
+            face_model=face_model,
+        )
 
-        # Bước 7: Lưu lịch sử + cập nhật hồ sơ
         if profile is not None and session is not None:
             session.save(profile.user_id)
-            summary_paths = update_periodic_summaries(profile.user_id)
             profile.record_session(result.final_emotion, result.conflict_key)
-            long_term_paths = update_long_term_personalization(profile.user_id, profile)
             profile.save()
-            print(f"\n    Đã lưu phiên vào hồ sơ '{profile.display_name}'")
-            for path in summary_paths:
-                print(f"    [summary] {path.name}")
-            for path in long_term_paths:
-                print(f"    [long-term] {path.name}")
 
-        # Bước 8: Hỏi feedback + cập nhật buffer on-device
-        if profile is not None:
-            _ask_emotion_feedback(profile, v_emotion, features, feedback_buffer)
+            summary_paths = update_periodic_summaries(profile.user_id)
+            long_term_paths = update_long_term_personalization(profile.user_id, profile)
+            print(f"\nĐã lưu phiên vào hồ sơ '{profile.display_name}'")
+            for path in summary_paths:
+                print(f"[summary] {path.name}")
+            for path in long_term_paths:
+                print(f"[long-term] {path.name}")
+
             _ask_style_feedback(profile)
             update_long_term_personalization(profile.user_id, profile)
             profile.save()
 
-        # Bước 9: Trigger incremental update nếu buffer đủ mẫu
-        if (
-            feedback_buffer is not None
-            and cfg.INCREMENTAL_ENABLED
-            and feedback_buffer.ready()
-        ):
-            audio_model = run_incremental_update(audio_model, feedback_buffer, profile.user_id) # type: ignore
-
-        # Tiếp tục?
-        again = input("\n  Bạn muốn thử lại không? (y/n): ").strip().lower()
-        if again not in {"y", "yes", "có", "co"}:
-            print("Hẹn gặp lại! ")
+        again = _ask("\nBạn muốn thử lại không? (y/n): ", "Bạn muốn thử lại không?")
+        if not _yes(again):
+            print("Hẹn gặp lại!")
+            _say("Hẹn gặp lại!")
             break
 
 

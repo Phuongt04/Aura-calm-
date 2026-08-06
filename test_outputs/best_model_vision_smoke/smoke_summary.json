@@ -1,0 +1,144 @@
+{
+  "model_path": "D:\\HAHA\\best_model.h5",
+  "input_shape": "(None, 224, 224, 3)",
+  "output_shape": "(None, 4)",
+  "params": 2923076,
+  "classes_assumed_from_test_camera_keras.py": [
+    "angry",
+    "happy",
+    "normal",
+    "sad"
+  ],
+  "zeros_prediction": {
+    "label": "happy",
+    "confidence": 0.5160991549491882,
+    "probs": {
+      "angry": 0.022776419296860695,
+      "happy": 0.5160991549491882,
+      "normal": 0.39000293612480164,
+      "sad": 0.07112139463424683
+    }
+  },
+  "random_prediction": {
+    "label": "normal",
+    "confidence": 0.4843723773956299,
+    "probs": {
+      "angry": 0.13190911710262299,
+      "happy": 0.33967408537864685,
+      "normal": 0.4843723773956299,
+      "sad": 0.04404434189200401
+    }
+  },
+  "face_sample_predictions": [
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\0.png",
+      "label": "sad",
+      "confidence": 0.5815419554710388,
+      "probs": {
+        "angry": 0.2516407072544098,
+        "happy": 0.08131276816129684,
+        "normal": 0.08550448715686798,
+        "sad": 0.5815419554710388
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\1.png",
+      "label": "sad",
+      "confidence": 0.5431038737297058,
+      "probs": {
+        "angry": 0.3053199350833893,
+        "happy": 0.06676508486270905,
+        "normal": 0.08481106907129288,
+        "sad": 0.5431038737297058
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\2.png",
+      "label": "sad",
+      "confidence": 0.5334574580192566,
+      "probs": {
+        "angry": 0.2832384705543518,
+        "happy": 0.08173982799053192,
+        "normal": 0.1015641987323761,
+        "sad": 0.5334574580192566
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\3.png",
+      "label": "sad",
+      "confidence": 0.5830652713775635,
+      "probs": {
+        "angry": 0.2548595070838928,
+        "happy": 0.08850565552711487,
+        "normal": 0.07356958836317062,
+        "sad": 0.5830652713775635
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\4.png",
+      "label": "sad",
+      "confidence": 0.6035279631614685,
+      "probs": {
+        "angry": 0.23348626494407654,
+        "happy": 0.060993872582912445,
+        "normal": 0.1019919365644455,
+        "sad": 0.6035279631614685
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\5.png",
+      "label": "sad",
+      "confidence": 0.59222412109375,
+      "probs": {
+        "angry": 0.2676706612110138,
+        "happy": 0.0540863499045372,
+        "normal": 0.0860188826918602,
+        "sad": 0.59222412109375
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\6.png",
+      "label": "sad",
+      "confidence": 0.6469669342041016,
+      "probs": {
+        "angry": 0.2303430736064911,
+        "happy": 0.053633999079465866,
+        "normal": 0.06905604153871536,
+        "sad": 0.6469669342041016
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\7.png",
+      "label": "sad",
+      "confidence": 0.6297212243080139,
+      "probs": {
+        "angry": 0.25495243072509766,
+        "happy": 0.047315873205661774,
+        "normal": 0.06801041960716248,
+        "sad": 0.6297212243080139
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\8.png",
+      "label": "sad",
+      "confidence": 0.587374746799469,
+      "probs": {
+        "angry": 0.24809208512306213,
+        "happy": 0.07841465622186661,
+        "normal": 0.08611848950386047,
+        "sad": 0.587374746799469
+      }
+    },
+    {
+      "file": "D:\\HAHA\\soft\\user_data\\phuong\\face_samples\\9.png",
+      "label": "sad",
+      "confidence": 0.5700149536132812,
+      "probs": {
+        "angry": 0.29195040464401245,
+        "happy": 0.056899845600128174,
+        "normal": 0.08113477379083633,
+        "sad": 0.5700149536132812
+      }
+    }
+  ]
+}

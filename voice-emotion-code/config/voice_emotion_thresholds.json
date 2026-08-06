@@ -1,0 +1,5 @@
+{
+  "confidence_threshold": 0.6,
+  "margin_threshold": 0.15,
+  "note": "Initial defaults. train_voice_emotion.py recalibrates these on the validation set after fine-tuning."
+}

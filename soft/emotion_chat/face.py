@@ -1,24 +1,19 @@
 """
 face.py
 =======
-Pipeline khuôn mặt: chụp camera → phát hiện mặt → tiền xử lý → dự đoán cảm xúc.
-Sử dụng Haar Cascade có sẵn trong OpenCV (không cần cài thêm gì).
-
-Để tích hợp model mặt:
-  1. Đặt FACE_ENABLED = True trong config.py
-  2. Đặt đúng đường dẫn FACE_MODEL_PATH
-  3. Điền FACE_RAW_CLASSES theo đúng thứ tự output của model
-  4. Điều chỉnh FACE_LABEL_MAP nếu nhãn model khác FER2013
+Face emotion pipeline: capture camera frames, detect the largest face,
+preprocess it, then run the face emotion model.
 """
 from __future__ import annotations
 
-import numpy as np
+import time
+
 import cv2
+import numpy as np
 
 from . import config as cfg
 
-# Lazy-load cascade để tránh tải khi module chưa cần dùng
-_face_cascade = None
+_face_cascade: cv2.CascadeClassifier | None = None
 
 
 def _get_cascade() -> cv2.CascadeClassifier:
@@ -26,82 +21,130 @@ def _get_cascade() -> cv2.CascadeClassifier:
     if _face_cascade is None:
         cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         _face_cascade = cv2.CascadeClassifier(cascade_path)
+        if _face_cascade.empty():
+            raise RuntimeError(f"Could not load Haar Cascade: {cascade_path}")
     return _face_cascade
 
 
-def capture_frame(camera_index: int = 0):
-    """
-    Chụp 1 frame từ camera.
-    Trả về frame (np.ndarray BGR) hoặc None nếu không mở được camera.
-    Thử vài lần để tránh frame đầu bị tối/đen.
-    """
-    cap = cv2.VideoCapture(camera_index)
-    if not cap.isOpened():
-        print(f"  [face] Không thể mở camera (index={camera_index}).")
-        return None
+def _open_camera(camera_index: int):
+    if getattr(cfg, "DEPLOY_TARGET", "") == "jetson":
+        cap = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
+        if cap.isOpened():
+            return cap
+        cap.release()
+    return cv2.VideoCapture(camera_index)
 
-    frame = None
+
+def capture_frames(
+    camera_index: int = 0,
+    frame_count: int | None = None,
+    warmup_frames: int | None = None,
+) -> list[np.ndarray]:
+    """Capture several frames while keeping the camera open."""
+    if frame_count is None:
+        frame_count = max(1, cfg.FACE_CAPTURE_FRAMES)
+    if warmup_frames is None:
+        warmup_frames = max(0, cfg.FACE_CAPTURE_WARMUP_FRAMES)
+
+    cap = _open_camera(camera_index)
+    if not cap.isOpened():
+        print(f"  [face] Khong the mo camera (index={camera_index}).")
+        return []
+
+    frames: list[np.ndarray] = []
     try:
-        for _ in range(5):  # Thử tối đa 5 lần
-            ret, f = cap.read()
-            if ret:
-                frame = f
-                break
+        for _ in range(warmup_frames):
+            cap.read()
+            time.sleep(0.03)
+        for _ in range(frame_count):
+            ret, frame = cap.read()
+            if ret and frame is not None:
+                frames.append(frame)
+            time.sleep(0.03)
     finally:
         cap.release()
-    return frame
+    return frames
+
+
+def capture_frame(camera_index: int = 0):
+    """Backward-compatible helper for callers that only need one frame."""
+    frames = capture_frames(camera_index, frame_count=1)
+    return frames[0] if frames else None
 
 
 def preprocess(frame: np.ndarray):
     """
-    Phát hiện mặt → cắt vùng mặt lớn nhất → resize → normalize.
-    Trả về (H, W, 1) float32 hoặc None nếu không tìm thấy mặt.
+    Detect the largest face, crop it with a small margin, resize, normalize.
+    Returns an RGB float32 image or None when no face is found.
     """
-    gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = _get_cascade().detectMultiScale(
-        gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30)
+        gray,
+        scaleFactor=cfg.FACE_DETECT_SCALE_FACTOR,
+        minNeighbors=cfg.FACE_DETECT_MIN_NEIGHBORS,
+        minSize=(cfg.FACE_DETECT_MIN_SIZE, cfg.FACE_DETECT_MIN_SIZE),
     )
     if len(faces) == 0:
         return None
 
-    # Lấy khuôn mặt lớn nhất (diện tích w*h)
     x, y, w, h = max(faces, key=lambda r: r[2] * r[3])
-    face_roi    = gray[y: y + h, x: x + w]
-    face_resize = cv2.resize(face_roi, (cfg.FACE_IMG_SIZE, cfg.FACE_IMG_SIZE))
-    face_norm   = face_resize.astype("float32") / 255.0
-    return np.expand_dims(face_norm, axis=-1)   # (H, W, 1)
+    margin = 10
+    x1 = max(0, x - margin)
+    y1 = max(0, y - margin)
+    x2 = min(frame.shape[1], x + w + margin)
+    y2 = min(frame.shape[0], y + h + margin)
+    face_roi = frame[y1:y2, x1:x2]
+    if face_roi.size == 0:
+        return None
+
+    face_rgb = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
+    face_resize = cv2.resize(face_rgb, (cfg.FACE_IMG_SIZE, cfg.FACE_IMG_SIZE))
+    return face_resize.astype("float32") / 255.0
 
 
 def _map_label(raw_label: str) -> str:
-    """Ánh xạ nhãn gốc của model mặt → nhãn chuẩn hệ thống."""
     return cfg.FACE_LABEL_MAP.get(raw_label.lower(), "binhthuong")
 
 
-def detect(model, face_raw_classes: list, camera_index: int = 0) -> tuple:
+def detect(model, face_raw_classes: list, camera_index: int | None = None) -> tuple:
     """
-    Chụp ảnh → nhận diện khuôn mặt → dự đoán cảm xúc.
+    Capture frames, find a face, then predict emotion.
 
-    Trả về:
-        (nhãn_chuẩn: str, độ_tin_cậy%: float)  — khi thành công
-        (None, None)                             — khi không có camera / không thấy mặt
-
-    face_raw_classes: list nhãn theo đúng thứ tự output của model (từ FACE_RAW_CLASSES).
+    Returns:
+        (normalized_label, confidence_percent) on success
+        (None, None) when camera/face detection fails
     """
-    frame = capture_frame(camera_index)
-    if frame is None:
+    if camera_index is None:
+        camera_index = cfg.FACE_CAMERA_INDEX
+
+    frames = capture_frames(camera_index)
+    if not frames:
         return None, None
 
-    processed = preprocess(frame)
+    processed = None
+    for frame in frames:
+        processed = preprocess(frame)
+        if processed is not None:
+            break
+
     if processed is None:
-        print("  [face] Không phát hiện khuôn mặt trong frame.")
+        print(f"  [face] Khong phat hien khuon mat trong {len(frames)} frame.")
         return None, None
 
-    inp       = np.expand_dims(processed, axis=0)   # (1, H, W, 1)
-    preds     = model.predict(inp, verbose=0)[0]
-    idx       = int(np.argmax(preds))
-    raw_label = face_raw_classes[idx]
-    mapped    = _map_label(raw_label)
-    conf      = float(preds[idx]) * 100
+    inp = np.expand_dims(processed, axis=0)
+    preds = model.predict(inp, verbose=0)[0]
+    if preds.shape[0] != len(face_raw_classes):
+        raise ValueError(
+            f"Face model output has {preds.shape[0]} classes, "
+            f"but FACE_RAW_CLASSES has {len(face_raw_classes)}"
+        )
+    if not np.all(np.isfinite(preds)):
+        raise ValueError("Face model prediction contains NaN or Inf")
 
-    print(f"  [face] {raw_label} → {mapped} ({conf:.1f}%)")
+    idx = int(np.argmax(preds))
+    raw_label = face_raw_classes[idx]
+    mapped = _map_label(raw_label)
+    conf = float(preds[idx]) * 100
+
+    print(f"  [face] {raw_label} -> {mapped} ({conf:.1f}%)")
     return mapped, conf

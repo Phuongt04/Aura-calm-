@@ -1,0 +1,55 @@
+{
+  "split": "test",
+  "model_path": "D:\\HAHA\\angry_boost_outputs (1)\\models\\cnn_gru_angry_boost_best.keras",
+  "weights_loaded_from": "D:\\HAHA\\test_outputs\\cnn_gru_angry_boost_retest_librosa\\model.weights.h5",
+  "metadata_path": "D:\\HAHA\\voice-emotion-data\\test_metadata.csv",
+  "preprocessing_note": "Ran in .venv with librosa; model architecture rebuilt from src.models.cnn_gru_ser then weights loaded from .keras archive.",
+  "resolved_rows": 1633,
+  "missing_rows": 0,
+  "accuracy": 0.29148805878750766,
+  "balanced_accuracy": 0.2997198504145528,
+  "macro_f1": 0.27986871496656535,
+  "macro_precision": 0.31435357285490295,
+  "macro_recall": 0.2997198504145528,
+  "angry_recall": 0.23385300668151449,
+  "class_order": [
+    "neutral",
+    "happy",
+    "sad",
+    "angry"
+  ],
+  "support": {
+    "neutral": 381,
+    "happy": 454,
+    "sad": 349,
+    "angry": 449
+  },
+  "avg_preprocessing_time_ms": 12.027368031610978,
+  "avg_inference_time_ms": 6.079679461103674,
+  "confusion_matrix": [
+    [
+      209,
+      51,
+      64,
+      57
+    ],
+    [
+      196,
+      72,
+      122,
+      64
+    ],
+    [
+      179,
+      44,
+      90,
+      36
+    ],
+    [
+      214,
+      39,
+      91,
+      105
+    ]
+  ]
+}

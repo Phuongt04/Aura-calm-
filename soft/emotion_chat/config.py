@@ -52,23 +52,47 @@ CHAT_BACKEND       = _env_str(
     "AURA_CHAT_BACKEND",
     "rule" if DEPLOY_TARGET == "jetson" else "ollama",
 )
+CHAT_FALLBACK_TO_RULE_ON_ERROR = _env_flag("AURA_CHAT_FALLBACK_TO_RULE_ON_ERROR", True)
 VOICE_CHAT_ENABLED = _env_flag("AURA_VOICE_CHAT_ENABLED", True)
 VOICE_CHAT_LANGUAGE = _env_str("AURA_VOICE_CHAT_LANGUAGE", "vi-VN")
 VOICE_CHAT_SECONDS = _env_float("AURA_VOICE_CHAT_SECONDS", 5.0)
+VOICE_CHAT_STT_TIMEOUT = _env_float("AURA_VOICE_CHAT_STT_TIMEOUT", 6.0)
 VOICE_CHAT_TTS_ENABLED = _env_flag("AURA_VOICE_CHAT_TTS_ENABLED", True)
+VOICE_CHAT_TTS_RATE = _env_int("AURA_VOICE_CHAT_TTS_RATE", 205)
+VOICE_CHAT_TTS_VOICE = _env_str(
+    "AURA_VOICE_CHAT_TTS_VOICE",
+    "vi" if DEPLOY_TARGET == "jetson" else ("Vietnamese" if os.name == "nt" else "vi"),
+)
+VOICE_CHAT_TTS_BACKEND = _env_str(
+    "AURA_VOICE_CHAT_TTS_BACKEND",
+    "piper" if DEPLOY_TARGET == "jetson" else ("windows" if os.name == "nt" else "linux"),
+)
+VOICE_CHAT_TTS_COMMAND = _env_str("AURA_VOICE_CHAT_TTS_COMMAND", "")
+VOICE_CHAT_PIPER_BIN = _env_str("AURA_VOICE_CHAT_PIPER_BIN", "piper")
+VOICE_CHAT_PIPER_MODEL = _env_path("AURA_VOICE_CHAT_PIPER_MODEL", Path(""))
+VOICE_CHAT_PIPER_SPEAKER = _env_str("AURA_VOICE_CHAT_PIPER_SPEAKER", "")
+VOICE_CHAT_PIPER_LENGTH_SCALE = _env_float("AURA_VOICE_CHAT_PIPER_LENGTH_SCALE", 1.0)
+VOICE_CHAT_PIPER_NOISE_SCALE = _env_float("AURA_VOICE_CHAT_PIPER_NOISE_SCALE", 0.667)
+VOICE_CHAT_PIPER_USE_CUDA = _env_flag("AURA_VOICE_CHAT_PIPER_USE_CUDA", False)
 VOICE_ASSISTANT_NAME = _env_str("AURA_VOICE_ASSISTANT_NAME", "MONE")
 VOICE_CHAT_MAX_EMPTY = _env_int("AURA_VOICE_CHAT_MAX_EMPTY", 2)
+VOICE_RESPONSE_SPEED_BY_EMOTION: dict = {
+    "vui": _env_int("AURA_VOICE_SPEED_VUI", 220),
+    "buon": _env_int("AURA_VOICE_SPEED_BUON", 180),
+    "gian": _env_int("AURA_VOICE_SPEED_GIAN", 195),
+    "binhthuong": _env_int("AURA_VOICE_SPEED_BINHTHUONG", VOICE_CHAT_TTS_RATE),
+}
 WAKE_WORD_ENABLED = _env_flag("AURA_WAKE_WORD_ENABLED", True)
 WAKE_WORDS = [
     word.strip().lower()
-    for word in _env_str("AURA_WAKE_WORDS", "mone,mone oi,aura,aura oi").split(",")
+    for word in _env_str("AURA_WAKE_WORDS", "haha").split(",")
     if word.strip()
 ]
 WAKE_LISTEN_SECONDS = _env_float("AURA_WAKE_LISTEN_SECONDS", 3.0)
 WAKE_MAX_EMPTY = _env_int("AURA_WAKE_MAX_EMPTY", 0)
 VOICE_RECORD_MAX_SECONDS = _env_float("AURA_VOICE_RECORD_MAX_SECONDS", 15.0)
-VOICE_RECORD_SILENCE_SECONDS = _env_float("AURA_VOICE_RECORD_SILENCE_SECONDS", 3.0)
-VOICE_RECORD_MIN_SECONDS = _env_float("AURA_VOICE_RECORD_MIN_SECONDS", 0.8)
+VOICE_RECORD_SILENCE_SECONDS = _env_float("AURA_VOICE_RECORD_SILENCE_SECONDS", 1.1)
+VOICE_RECORD_MIN_SECONDS = _env_float("AURA_VOICE_RECORD_MIN_SECONDS", 0.5)
 VOICE_RECORD_RMS_THRESHOLD = _env_float("AURA_VOICE_RECORD_RMS_THRESHOLD", 0.012)
 MUSIC_DIR = _env_path("AURA_MUSIC_DIR", BASE_DIR / "music")
 MUSIC_DEFAULT_QUERY = _env_str("AURA_MUSIC_DEFAULT_QUERY", "nhac thu gian")
@@ -76,30 +100,76 @@ OLLAMA_BASE_URL    = _env_str("AURA_OLLAMA_BASE_URL", OLLAMA_BASE_URL)
 OLLAMA_MODEL       = _env_str("AURA_OLLAMA_MODEL", OLLAMA_MODEL)
 OLLAMA_TEMPERATURE = _env_float("AURA_OLLAMA_TEMPERATURE", OLLAMA_TEMPERATURE)
 OLLAMA_MAX_TOKENS  = _env_int("AURA_OLLAMA_MAX_TOKENS", OLLAMA_MAX_TOKENS)
+OLLAMA_TIMEOUT_SECONDS = _env_float("AURA_OLLAMA_TIMEOUT_SECONDS", 30.0)
 
 # ── Model âm thanh ────────────────────────────────────────────────────────────
-AUDIO_MODEL_PATH  = PROJECT_ROOT / "final_production_model.h5"
+AUDIO_MODEL_PATH  = PROJECT_ROOT / "angry_boost_outputs (1)" / "models" / "cnn_gru_angry_boost_best.keras"
 AUDIO_LABEL_PATH  = PROJECT_ROOT / "label_mapping_final.pkl"
-AUDIO_DURATION    = 3.0
-AUDIO_SAMPLE_RATE = 22050
+AUDIO_FEATURE_MODE = "cnn_gru_logmel_delta"
+AUDIO_DURATION    = 4.0
+AUDIO_SAMPLE_RATE = 16000
 AUDIO_N_FRAMES    = 10
 AUDIO_IMG_SIZE    = 64
 AUDIO_WINDOW_STRIDE = 1.5
+AUDIO_N_FFT       = 512
+AUDIO_WIN_LENGTH  = 400
+AUDIO_HOP_LENGTH  = 160
+AUDIO_N_MELS      = 64
+AUDIO_FMIN        = 50
+AUDIO_FMAX        = 8000
+
+AUDIO_RAW_CLASSES: list = ["neutral", "happy", "sad", "angry"]
+AUDIO_LABEL_MAP: dict = {
+    "neutral": "binhthuong",
+    "happy": "vui",
+    "sad": "buon",
+    "angry": "gian",
+}
 
 AUDIO_MODEL_PATH  = _env_path("AURA_AUDIO_MODEL_PATH", AUDIO_MODEL_PATH)
 AUDIO_LABEL_PATH  = _env_path("AURA_AUDIO_LABEL_PATH", AUDIO_LABEL_PATH)
+AUDIO_FEATURE_MODE = _env_str("AURA_AUDIO_FEATURE_MODE", AUDIO_FEATURE_MODE)
 AUDIO_DURATION    = _env_float("AURA_AUDIO_DURATION", AUDIO_DURATION)
 AUDIO_SAMPLE_RATE = _env_int("AURA_AUDIO_SAMPLE_RATE", AUDIO_SAMPLE_RATE)
 AUDIO_N_FRAMES    = _env_int("AURA_AUDIO_N_FRAMES", AUDIO_N_FRAMES)
 AUDIO_IMG_SIZE    = _env_int("AURA_AUDIO_IMG_SIZE", AUDIO_IMG_SIZE)
 AUDIO_WINDOW_STRIDE = _env_float("AURA_AUDIO_WINDOW_STRIDE", AUDIO_WINDOW_STRIDE)
+AUDIO_N_FFT       = _env_int("AURA_AUDIO_N_FFT", AUDIO_N_FFT)
+AUDIO_WIN_LENGTH  = _env_int("AURA_AUDIO_WIN_LENGTH", AUDIO_WIN_LENGTH)
+AUDIO_HOP_LENGTH  = _env_int("AURA_AUDIO_HOP_LENGTH", AUDIO_HOP_LENGTH)
+AUDIO_N_MELS      = _env_int("AURA_AUDIO_N_MELS", AUDIO_N_MELS)
+AUDIO_FMIN        = _env_int("AURA_AUDIO_FMIN", AUDIO_FMIN)
+AUDIO_FMAX        = _env_int("AURA_AUDIO_FMAX", AUDIO_FMAX)
 AUDIO_DEMO_PATH   = _env_path("AURA_DEMO_AUDIO_PATH", Path(""))
 AUDIO_MIN_RMS     = _env_float("AURA_AUDIO_MIN_RMS", 0.008)
 AUDIO_MIN_PEAK    = _env_float("AURA_AUDIO_MIN_PEAK", 0.03)
+AUDIO_MAX_RMS     = _env_float("AURA_AUDIO_MAX_RMS", 0.35)
+AUDIO_MIN_CONFIDENCE = _env_float("AURA_AUDIO_MIN_CONFIDENCE", 0.0)
+AUDIO_LOW_CONFIDENCE_FALLBACK_ENABLED = _env_flag("AURA_AUDIO_LOW_CONFIDENCE_FALLBACK_ENABLED", False)
+AUDIO_LOW_CONFIDENCE_FALLBACK_EMOTION = _env_str("AURA_AUDIO_LOW_CONFIDENCE_FALLBACK_EMOTION", "binhthuong")
+AUDIO_UNCERTAIN_MARGIN = _env_float("AURA_AUDIO_UNCERTAIN_MARGIN", 12.0)
+AUDIO_UNCERTAIN_AGREEMENT = _env_float("AURA_AUDIO_UNCERTAIN_AGREEMENT", 0.55)
+AUDIO_NOISE_FLOOR_RATIO_MAX = _env_float("AURA_AUDIO_NOISE_FLOOR_RATIO_MAX", 0.68)
+AUDIO_NOISE_REDUCTION_ENABLED = _env_flag("AURA_AUDIO_NOISE_REDUCTION_ENABLED", True)
+AUDIO_PREEMPHASIS_COEF = _env_float("AURA_AUDIO_PREEMPHASIS_COEF", 0.97)
+AUDIO_NOISE_REDUCTION_STRENGTH = _env_float("AURA_AUDIO_NOISE_REDUCTION_STRENGTH", 0.65)
+AUDIO_TRIM_SILENCE_ENABLED = _env_flag("AURA_AUDIO_TRIM_SILENCE_ENABLED", True)
+AUDIO_TRIM_FRAME_MS = _env_float("AURA_AUDIO_TRIM_FRAME_MS", 30.0)
+AUDIO_TRIM_HOP_MS = _env_float("AURA_AUDIO_TRIM_HOP_MS", 10.0)
+AUDIO_TRIM_THRESHOLD_RATIO = _env_float("AURA_AUDIO_TRIM_THRESHOLD_RATIO", 0.18)
+AUDIO_TRIM_PADDING_SECONDS = _env_float("AURA_AUDIO_TRIM_PADDING_SECONDS", 0.15)
+
+# Runtime emotion tracking inside an active chat session.
+DYNAMIC_EMOTION_TRACKING_ENABLED = _env_flag("AURA_DYNAMIC_EMOTION_TRACKING_ENABLED", True)
+DYNAMIC_EMOTION_MIN_CONFIDENCE = _env_float("AURA_DYNAMIC_EMOTION_MIN_CONFIDENCE", 0.0)
+DYNAMIC_FACE_EVERY_N_TURNS = _env_int("AURA_DYNAMIC_FACE_EVERY_N_TURNS", 3)
+TEXT_SENTIMENT_ENABLED = _env_flag("AURA_TEXT_SENTIMENT_ENABLED", True)
+TEXT_SENTIMENT_STRONG_SCORE = _env_int("AURA_TEXT_SENTIMENT_STRONG_SCORE", 2)
+TEXT_SENTIMENT_OVERRIDE_UNCERTAIN = _env_flag("AURA_TEXT_SENTIMENT_OVERRIDE_UNCERTAIN", True)
 
 # ── Model khuôn mặt ───────────────────────────────────────────────────────────
 FACE_ENABLED    = False                             # ← đặt True khi có model mặt
-FACE_MODEL_PATH = BASE_DIR / "face_emotion_model.h5"
+FACE_MODEL_PATH = PROJECT_ROOT / "best_model.h5"
 FACE_IMG_SIZE   = 48                                # kích thước đầu vào model mặt
 
 # Nhãn gốc của model mặt theo ĐÚNG THỨ TỰ output index
@@ -107,20 +177,26 @@ FACE_IMG_SIZE   = 48                                # kích thước đầu vào
 FACE_ENABLED    = _env_flag("AURA_FACE_ENABLED", FACE_ENABLED)
 FACE_MODEL_PATH = _env_path("AURA_FACE_MODEL_PATH", FACE_MODEL_PATH)
 FACE_IMG_SIZE   = _env_int("AURA_FACE_IMG_SIZE", FACE_IMG_SIZE)
+FACE_ENABLED    = _env_flag("AURA_FACE_ENABLED", True)
+FACE_IMG_SIZE   = _env_int("AURA_FACE_IMG_SIZE", 224)
+FACE_CAMERA_INDEX = _env_int("AURA_FACE_CAMERA_INDEX", 0)
+FACE_CAPTURE_FRAMES = _env_int("AURA_FACE_CAPTURE_FRAMES", 15)
+FACE_CAPTURE_WARMUP_FRAMES = _env_int("AURA_FACE_CAPTURE_WARMUP_FRAMES", 5)
+FACE_DETECT_SCALE_FACTOR = _env_float("AURA_FACE_DETECT_SCALE_FACTOR", 1.1)
+FACE_DETECT_MIN_NEIGHBORS = _env_int("AURA_FACE_DETECT_MIN_NEIGHBORS", 4)
+FACE_DETECT_MIN_SIZE = _env_int("AURA_FACE_DETECT_MIN_SIZE", 60)
 
 FACE_RAW_CLASSES: list = [
-    "angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"
+    "angry", "happy", "normal", "sad"
 ]
 
 # Ánh xạ nhãn gốc model mặt → 4 nhãn chuẩn hệ thống
 FACE_LABEL_MAP: dict = {
     "angry":    "gian",
-    "disgust":  "gian",
-    "fear":     "buon",
     "happy":    "vui",
+    "normal":   "binhthuong",
     "neutral":  "binhthuong",
     "sad":      "buon",
-    "surprise": "vui",
 }
 
 # ── Mức độ tiêu cực (dùng để ưu tiên khi xung đột) ───────────────────────────
@@ -135,48 +211,44 @@ NEGATIVITY_WEIGHT: dict = {
 # ── Cấu hình cảm xúc đơn (không xung đột) ────────────────────────────────────
 EMOTION_CONFIG: dict = {
     "vui": {
-        "display": "VUI VẺ 😊",
-        "opening": "Ôi, trông bạn vui vẻ lắm đó! Hôm nay có chuyện gì vui thế?",
+        "display": "VUI VẺ ",
+        "opening": "Nghe bạn có vẻ đang vui đó. Chuyện gì làm hôm nay sáng lên vậy?",
         "system": (
-            "Bạn là một người bạn thân vui tính, nhiệt tình. "
-            "Người dùng đang trong tâm trạng vui vẻ, hứng khởi. "
-            "Hãy chia sẻ niềm vui đó, đặt câu hỏi gợi mở, kể chuyện hài hước, "
-            "và duy trì không khí tích cực trong suốt cuộc trò chuyện. "
-            "Trả lời bằng tiếng Việt, ngắn gọn 2-3 câu."
+            "Người dùng có tín hiệu đang vui hoặc hào hứng. "
+            "Hãy đáp lại như một người bạn thân thiện: vui cùng họ, khuếch đại năng lượng tích cực "
+            "nhưng không nói quá lố. "
+            "Có thể hỏi thêm một câu mở để họ kể tiếp hoặc giúp họ tận dụng tâm trạng tốt này. "
+            "Trả lời bằng tiếng Việt tự nhiên, 1-3 câu."
         ),
     },
     "buon": {
-        "display": "BUỒN BÃ 😢",
-        "opening": "Bạn có vẻ đang buồn... Bạn muốn kể mình nghe không?",
+        "display": "BUỒN BÃ ",
+        "opening": "Mình nghe có vẻ hôm nay bạn hơi nặng lòng. Bạn muốn kể mình nghe không?",
         "system": (
-            "Bạn là một người bạn đồng cảm, ấm áp. "
-            "Người dùng đang buồn và cần được lắng nghe, an ủi. "
-            "Hãy thể hiện sự thấu hiểu, tránh phán xét, đặt câu hỏi nhẹ nhàng "
-            "để khuyến khích họ chia sẻ, và đưa ra những lời động viên chân thành. "
-            "Trả lời bằng tiếng Việt, giọng điệu nhẹ nhàng, 2-3 câu."
+            "Người dùng có tín hiệu đang buồn, mệt hoặc cần được lắng nghe. "
+            "Hãy phản hồi chậm rãi, ấm áp, không phán xét và không vội đưa lời khuyên. "
+            "Ưu tiên công nhận cảm xúc của họ trước, sau đó hỏi một câu nhẹ để họ có thể chia sẻ thêm nếu muốn. "
+            "Trả lời bằng tiếng Việt tự nhiên, 1-3 câu."
         ),
     },
     "gian": {
-        "display": "TỨC GIẬN 😠",
-        "opening": "Mình thấy bạn đang không vui. Điều gì đang xảy ra vậy?",
+        "display": "TỨC GIẬN ",
+        "opening": "Mình nghe có vẻ bạn đang rất khó chịu. Chuyện gì làm bạn bực vậy?",
         "system": (
-            "Bạn là một người bạn bình tĩnh, kiên nhẫn. "
-            "Người dùng đang tức giận hoặc khó chịu. "
-            "Hãy thừa nhận cảm xúc của họ, KHÔNG tranh luận, KHÔNG phán xét, "
-            "giúp họ giải tỏa bằng cách lắng nghe và đặt câu hỏi làm dịu tình hình. "
-            "Dùng giọng điệu bình thản, xây dựng. "
-            "Trả lời bằng tiếng Việt, 2-3 câu."
+            "Người dùng có tín hiệu đang tức giận, căng thẳng hoặc khó chịu. "
+            "Hãy giữ giọng bình tĩnh, không tranh luận, không lên lớp và không bênh/vạch tội ai quá sớm. "
+            "Công nhận cảm xúc của họ, giúp họ nói rõ chuyện gì xảy ra, rồi hướng cuộc trò chuyện về cách xử lý an toàn hơn. "
+            "Trả lời bằng tiếng Việt tự nhiên, 1-3 câu."
         ),
     },
     "binhthuong": {
-        "display": "BÌNH THƯỜNG 😐",
-        "opening": "Chào bạn! Hôm nay bạn cần mình giúp gì không?",
+        "display": "BÌNH THƯỜNG ",
+        "opening": "Mình đây. Hôm nay bạn muốn nói chuyện hay cần mình giúp gì?",
         "system": (
-            "Bạn là một trợ lý thông minh, thân thiện. "
-            "Người dùng đang ở tâm trạng bình thường. "
-            "Hãy trò chuyện tự nhiên, hữu ích, hỏi thăm xem họ cần gì hoặc "
-            "muốn nói về chủ đề gì hôm nay. "
-            "Trả lời bằng tiếng Việt, 2-3 câu."
+            "Người dùng có tín hiệu cảm xúc ổn định hoặc bình thường. "
+            "Hãy trò chuyện như một trợ lý thân thiện, rõ ràng và hữu ích. "
+            "Nếu họ hỏi việc cụ thể, trả lời thẳng vào vấn đề; nếu họ chỉ muốn nói chuyện, giữ nhịp tự nhiên và dễ gần. "
+            "Trả lời bằng tiếng Việt tự nhiên, 1-3 câu."
         ),
     },
 }
@@ -186,7 +258,7 @@ EMOTION_CONFIG: dict = {
 # context_hint sẽ được GHÉP VÀO ĐẦU system prompt của cảm xúc được ưu tiên.
 CONFLICT_CONFIG: dict = {
     "vui_vs_buon": {
-        "display": "GIỌNG VUI / MẶT BUỒN 😊↔😢",
+        "display": "GIỌNG VUI / MẶT BUỒN ",
         "opening": (
             "Bạn có vẻ vui đấy... nhưng mình cảm giác có điều gì đó không ổn. "
             "Bạn có thật sự ổn không?"
@@ -200,7 +272,7 @@ CONFLICT_CONFIG: dict = {
         ),
     },
     "vui_vs_gian": {
-        "display": "GIỌNG VUI / MẶT TỨC 😊↔😠",
+        "display": "GIỌNG VUI / MẶT TỨC ",
         "opening": (
             "Bạn nghe có vẻ vui, nhưng mình thấy bạn đang có gì đó bực bội. "
             "Chuyện gì vậy, kể mình nghe nhé?"
@@ -215,7 +287,7 @@ CONFLICT_CONFIG: dict = {
         ),
     },
     "binhthuong_vs_buon": {
-        "display": "GIỌNG BÌNH THƯỜNG / MẶT BUỒN 😐↔😢",
+        "display": "GIỌNG BÌNH THƯỜNG / MẶT BUỒN ",
         "opening": (
             "Mình thấy bạn có vẻ không được vui lắm hôm nay. "
             "Bạn có muốn nói chuyện không?"
@@ -229,7 +301,7 @@ CONFLICT_CONFIG: dict = {
         ),
     },
     "binhthuong_vs_gian": {
-        "display": "GIỌNG BÌNH THƯỜNG / MẶT TỨC 😐↔😠",
+        "display": "GIỌNG BÌNH THƯỜNG / MẶT TỨC ",
         "opening": (
             "Bạn trông có vẻ đang bực bội điều gì đó. "
             "Muốn kể mình nghe không?"
@@ -243,7 +315,7 @@ CONFLICT_CONFIG: dict = {
         ),
     },
     "buon_vs_gian": {
-        "display": "GIỌNG BUỒN / MẶT TỨC 😢↔😠",
+        "display": "GIỌNG BUỒN / MẶT TỨC ",
         "opening": (
             "Mình thấy bạn đang có nhiều cảm xúc lẫn lộn. "
             "Cứ nói ra đi, mình ở đây lắng nghe."
@@ -256,7 +328,7 @@ CONFLICT_CONFIG: dict = {
         ),
     },
     "gian_vs_buon": {
-        "display": "GIỌNG TỨC / MẶT BUỒN 😠↔😢",
+        "display": "GIỌNG TỨC / MẶT BUỒN ",
         "opening": (
             "Nghe giọng bạn có vẻ bực lắm... "
             "nhưng mình thấy cũng có gì đó đau nữa. Chuyện gì xảy ra vậy?"
@@ -270,7 +342,7 @@ CONFLICT_CONFIG: dict = {
         ),
     },
     "vui_vs_vui": {   # đồng thuận tích cực – không phải xung đột thật, giữ để tham khảo
-        "display": "CẢ HAI ĐỀU VUI 😊😊",
+        "display": "CẢ HAI ĐỀU VUI ",
         "opening": "Ôi, trông bạn vui vẻ lắm đó! Hôm nay có chuyện gì vui thế?",
         "context_hint": "",
     },
@@ -279,7 +351,7 @@ CONFLICT_CONFIG: dict = {
 # Clarify conflict with one short follow-up question before entering the
 # main chat loop. This keeps the flow focused on only two channels:
 # voice + face, with the system's 4 labels.
-CLARIFY_ON_CONFLICT = True
+CLARIFY_ON_CONFLICT = False
 
 CLARIFY_FALLBACK_QUESTION = (
     "Minh thay ban dang co chut mau thuan trong cam xuc. "
@@ -395,11 +467,11 @@ STYLE_FEEDBACK_EVERY_N = _env_int("AURA_STYLE_FEEDBACK_EVERY_N", 3)
 MAX_HISTORY_TURNS = 6
 
 # Bật tính năng hỏi xác nhận cảm xúc sau mỗi phiên → thu thập feedback re-train
-EMOTION_FEEDBACK_ENABLED = True
+EMOTION_FEEDBACK_ENABLED = False
 
 # ── On-device Incremental Learning ───────────────────────────────────────────
 # Bật/tắt toàn bộ tính năng tự học trên thiết bị
-INCREMENTAL_ENABLED      = True
+INCREMENTAL_ENABLED      = False
 
 # Số mẫu xác nhận cần tích lũy trước khi trigger re-train head
 # Nhỏ → cập nhật nhanh nhưng dễ overfit  |  Lớn → ổn định hơn

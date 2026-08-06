@@ -1,0 +1,7 @@
+tensorflow>=2.10
+numpy
+librosa
+scipy
+scikit-learn
+matplotlib
+PyYAML

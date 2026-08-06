@@ -1,0 +1,14 @@
+{
+  "label_order": [
+    "neutral",
+    "happy",
+    "sad",
+    "angry"
+  ],
+  "label_to_index": {
+    "neutral": 0,
+    "happy": 1,
+    "sad": 2,
+    "angry": 3
+  }
+}

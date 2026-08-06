@@ -1,0 +1,41 @@
+{
+  "total_rows": 11063,
+  "valid_rows": 11062,
+  "invalid_rows": 1,
+  "issues": {
+    "sample_rate_mismatch": 1861,
+    "unreadable_audio": 1,
+    "possible_augmentation_group": 9122
+  },
+  "source_emotion_counts": {
+    "unknown": {
+      "neutral": 63,
+      "sad": 67,
+      "angry": 67,
+      "happy": 66
+    },
+    "tess": {
+      "neutral": 399,
+      "sad": 400,
+      "angry": 400,
+      "happy": 400
+    },
+    "vietnamese_kaggle": {
+      "angry": 2561,
+      "happy": 2615,
+      "neutral": 2135,
+      "sad": 1890
+    }
+  },
+  "class_counts": {
+    "neutral": 2597,
+    "sad": 2357,
+    "angry": 3028,
+    "happy": 3081
+  },
+  "source_counts": {
+    "unknown": 263,
+    "tess": 1599,
+    "vietnamese_kaggle": 9201
+  }
+}

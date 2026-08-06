@@ -1,0 +1,10 @@
+numpy
+h5py
+librosa
+sounddevice
+SpeechRecognition
+pyttsx3
+openai
+opencv-python
+scipy
+scikit-learn

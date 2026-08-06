@@ -1,0 +1,104 @@
+{
+  "started_at": "2026-07-14T23:08:15",
+  "git_commit": "",
+  "random_seed": 42,
+  "config": {
+    "audio": {
+      "sample_rate": 16000,
+      "duration_seconds": 4.0,
+      "n_fft": 512,
+      "win_length": 400,
+      "hop_length": 160,
+      "n_mels": 64,
+      "fmin": 50,
+      "fmax": 8000
+    },
+    "split": {
+      "train_ratio": 0.7,
+      "val_ratio": 0.15,
+      "test_ratio": 0.15,
+      "random_seed": 42
+    },
+    "training": {
+      "batch_size": 16,
+      "stage1_epochs": 60,
+      "stage1_learning_rate": 0.0003,
+      "stage2_epochs": 20,
+      "stage2_learning_rate": 1e-05,
+      "label_smoothing": 0.05,
+      "early_stopping_patience": 8
+    },
+    "augmentation": {
+      "enabled": true,
+      "gain_min": 0.8,
+      "gain_max": 1.2,
+      "time_shift_ms": 200,
+      "time_stretch_min": 0.95,
+      "time_stretch_max": 1.05,
+      "pitch_shift_max_semitones": 1,
+      "noise_snr_min": 15,
+      "noise_snr_max": 30,
+      "frequency_mask_max": 8,
+      "time_mask_max": 20
+    },
+    "sampling": {
+      "tess_weight": 0.25,
+      "vietnamese_kaggle_weight": 0.55,
+      "self_recorded_weight": 0.2
+    },
+    "inference": {
+      "confidence_threshold": 0.6,
+      "margin_threshold": 0.15,
+      "window_overlap": 0.5
+    }
+  },
+  "train": {
+    "samples": 7766,
+    "class_counts": {
+      "angry": 2131,
+      "happy": 2172,
+      "neutral": 1815,
+      "sad": 1648
+    },
+    "source_counts": {
+      "tess": 1118,
+      "unknown": 184,
+      "vietnamese_kaggle": 6464
+    }
+  },
+  "val": {
+    "samples": 1663,
+    "class_counts": {
+      "angry": 447,
+      "happy": 455,
+      "neutral": 401,
+      "sad": 360
+    },
+    "source_counts": {
+      "tess": 240,
+      "unknown": 39,
+      "vietnamese_kaggle": 1384
+    }
+  },
+  "test": {
+    "samples": 1633,
+    "class_counts": {
+      "angry": 449,
+      "happy": 454,
+      "neutral": 381,
+      "sad": 349
+    },
+    "source_counts": {
+      "tess": 240,
+      "unknown": 40,
+      "vietnamese_kaggle": 1353
+    }
+  },
+  "input_shape": [
+    64,
+    401,
+    3
+  ],
+  "model_name": "CNN_GRU_Vietnamese_SER",
+  "parameter_count": 422655
+}
